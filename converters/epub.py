@@ -5,88 +5,18 @@ import copy
 from ebooklib import epub
 from urllib.parse import urldefrag
 from lxml import html, etree
-
-# ================================================================
-# HELPERS & LOGIC (Refactored from original script)
-# ================================================================
-
-def parse_parts(parts_str):
-    if not parts_str:
-        return []
-    result = []
-    for segment in parts_str.split(","):
-        segment = segment.strip()
-        if not segment:
-            continue
-        try:
-            start_id, part_num = segment.split(":")
-            result.append((int(start_id.strip()), int(part_num.strip())))
-        except ValueError:
-            pass
-    result.sort(key=lambda x: x[0])
-    return result
-
-def parse_footnote_markers(markers_str):
-    if not markers_str:
-        return []
-    return [m.strip() for m in markers_str.split(",") if m.strip()]
-
-def setup_database(db_path, book_id):
-    conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
-    table_b = f"b{book_id}"
-    table_t = f"t{book_id}"
-    cur.executescript(f"""
-        DROP TABLE IF EXISTS {table_b};
-        DROP TABLE IF EXISTS {table_t};
-
-        CREATE TABLE {table_b} (
-            nass TEXT COLLATE NOCASE,
-            part INTEGER,
-            id   INTEGER,
-            page INTEGER
-        );
-
-        CREATE TABLE {table_t} (
-            tit TEXT COLLATE NOCASE,
-            lvl INTEGER,
-            sub INTEGER,
-            id  INTEGER
-        );
-    """)
-    conn.commit()
-    return conn, cur, table_b, table_t
-
-def get_part(global_id, part_boundaries):
-    if not part_boundaries:
-        return 1
-    part = part_boundaries[0][1]
-    for start_id, part_num in part_boundaries:
-        if global_id >= start_id:
-            part = part_num
-        else:
-            break
-    return part
-
-def get_page_reset_ids(part_boundaries):
-    if not part_boundaries:
-        return set()
-    return {start_id for start_id, _ in part_boundaries[1:]}
-
-def clean_title_text(text):
-    if not text:
-        return ""
-    chars_to_remove = [chr(8207), chr(8206), chr(8203), chr(160)]
-    for c in chars_to_remove:
-        text = text.replace(c, "")
-    return text.strip()
+from converters.utils import (
+    setup_database, parse_parts, parse_footnote_markers, 
+    get_part, get_page_reset_ids, clean_content_text, clean_toc_title,
+    wrap_direction, parse_skip_ids
+)
 
 def walk_toc(entries, toc_entries, lvl=1, parent_toc_index=None):
     for entry in entries:
         if isinstance(entry, epub.Link):
             file, anchor = urldefrag(entry.href)
             toc_entries.append({
-                "title":             clean_title_text(entry.title),
+                "title":             entry.title,
                 "file":              file,
                 "anchor":            anchor if anchor else None,
                 "lvl":               lvl,
@@ -97,7 +27,7 @@ def walk_toc(entries, toc_entries, lvl=1, parent_toc_index=None):
             file, anchor = urldefrag(section.href)
             my_index = len(toc_entries)
             toc_entries.append({
-                "title":             clean_title_text(section.title),
+                "title":             section.title,
                 "file":              file,
                 "anchor":            anchor if anchor else None,
                 "lvl":               lvl,
@@ -241,14 +171,16 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
 
     return final_clean, final_raw
 
-# ================================================================
-# MAIN ENTRY POINT FOR WEB/EXTERNAL
-# ================================================================
-
-def process_epub(epub_path, db_path, book_id="00000", page_marker=None, footnote_markers_str=None, parts_str=None):
+def process_epub(epub_path, db_path, book_id="00000", page_marker=None, 
+                 footnote_markers_str=None, parts_str=None,
+                 collapse_newlines=False, clean_toc=False, fix_cap=False,
+                 detect_dir=False, skip_ids_str=None, max_len_skip=0,
+                 progress_callback=None, footnote_separator=None):
+    
     footnote_markers = parse_footnote_markers(footnote_markers_str)
     part_boundaries = parse_parts(parts_str)
     page_reset_ids  = get_page_reset_ids(part_boundaries)
+    skip_ids_set    = parse_skip_ids(skip_ids_str)
 
     book = epub.read_epub(epub_path)
     toc_entries = []
@@ -257,12 +189,17 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None, footnote
     conn, cur, table_b, table_t = setup_database(db_path, book_id)
 
     global_id           = 1
+    source_page_counter = 1
     current_page_number = 1
     xhtml_cache         = {}
     processed_locations = {}
     processed_titles    = {}
 
+    total_entries = len(toc_entries)
     for idx, entry in enumerate(toc_entries):
+        if progress_callback:
+            progress_callback(idx / total_entries, f"Memproses bab {idx+1}/{total_entries}: {entry['title']}")
+            
         location_key = (entry["file"], entry["anchor"])
         toc_link_id  = 0
 
@@ -291,8 +228,20 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None, footnote
                     first_assigned = False
 
                     for raw_chunk, clean_chunk in zip(raw_chunks, clean_chunks):
-                        chunk_clean = clean_chunk.strip()
+                        chunk_clean = clean_content_text(clean_chunk, collapse_newlines=collapse_newlines, footnote_separator=footnote_separator)
+                        chunk_clean = wrap_direction(chunk_clean, enable=detect_dir)
                         if not chunk_clean:
+                            continue
+
+                        # SKIP LOGIC
+                        should_skip = False
+                        if source_page_counter in skip_ids_set:
+                            should_skip = True
+                        if max_len_skip > 0 and len(chunk_clean) > max_len_skip:
+                            should_skip = True
+                            
+                        if should_skip:
+                            source_page_counter += 1
                             continue
 
                         if global_id in page_reset_ids:
@@ -316,16 +265,19 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None, footnote
                                 processed_locations[key] = global_id
 
                         global_id           += 1
+                        source_page_counter += 1
                         current_page_number += 1
 
                     if location_key not in processed_locations:
                         processed_locations[location_key] = toc_link_id or 0
 
-        clean_tit = entry["title"]
+        raw_tit = entry["title"]
+        clean_tit = clean_toc_title(raw_tit, remove_numbers=clean_toc, fix_capitalization=fix_cap)
+        
         if toc_link_id == 0 and location_key in processed_locations:
             toc_link_id = processed_locations[location_key]
 
-        if clean_tit not in processed_titles:
+        if clean_tit and clean_tit not in processed_titles:
             cur.execute(
                 f"INSERT INTO {table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
                 (clean_tit, entry["lvl"], 0, toc_link_id),
