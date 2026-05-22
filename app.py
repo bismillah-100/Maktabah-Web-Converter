@@ -140,7 +140,7 @@ uploaded_file = st.file_uploader(t["uploader_label"], type=["epub", "docx"])
 if uploaded_file is not None:
     file_extension = os.path.splitext(uploaded_file.name)[1].lower()
     
-    if st.button(t["convert_btn"]):
+    if st.button(t["convert_btn"], type="primary", use_container_width=True):
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -193,7 +193,9 @@ if uploaded_file is not None:
                             label=t["download_btn"],
                             data=f,
                             file_name=output_filename,
-                            mime="application/x-sqlite3"
+                            mime="application/x-sqlite3",
+                            type="primary",
+                            use_container_width=True
                         )
                 
                 if os.path.exists(input_path): os.remove(input_path)
