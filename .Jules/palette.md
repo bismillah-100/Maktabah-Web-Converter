@@ -1,0 +1,3 @@
+## 2024-06-25 - Improve CTA Button Visibility in Streamlit
+**Learning:** In Streamlit applications, default buttons can blend in with the rest of the UI, making primary call-to-action elements like "Convert" or "Download" less obvious. Applying `type="primary"` and `use_container_width=True` significantly improves their visual prominence, creating larger touch targets and clearer focal points for users.
+**Action:** When building or modifying Streamlit interfaces, always ensure that the primary action on the page uses `type="primary"` and is sized appropriately (e.g., full width) to guide user interaction clearly.
