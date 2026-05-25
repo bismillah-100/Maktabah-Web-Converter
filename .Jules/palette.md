@@ -1,3 +1,5 @@
 ## 2024-06-25 - Improve CTA Button Visibility in Streamlit
 **Learning:** In Streamlit applications, default buttons can blend in with the rest of the UI, making primary call-to-action elements like "Convert" or "Download" less obvious. Applying `type="primary"` and `use_container_width=True` significantly improves their visual prominence, creating larger touch targets and clearer focal points for users.
-**Action:** When building or modifying Streamlit interfaces, always ensure that the primary action on the page uses `type="primary"` and is sized appropriately (e.g., full width) to guide user interaction clearly.
+**Action:** When building or modifying Streamlit interfaces, always ensure that the primary action on the page uses `type="primary"` and is sized appropriately (e.g., full width) to guide user interaction clearly.## 2024-05-18 - Streamlit Inputs Placeholder Pattern
+**Learning:** Adding `placeholder` values to Streamlit `st.text_input` and `st.text_area` provides excellent immediate zero-state guidance without users needing to hover over help tooltips. Setting `page_icon` in `st.set_page_config` is a quick way to improve the browser tab's visual polish.
+**Action:** Always check if text inputs have placeholders, especially when specific formats are expected. Also ensure page configuration has a relevant icon.
