@@ -196,8 +196,13 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
     processed_titles    = {}
 
     total_entries = len(toc_entries)
+
+    # ⚡ Bolt: Throttling Streamlit UI updates to max ~100 times per document
+    # Updating UI thousands of times blocks the main thread and drastically slows down conversion.
+    update_step = max(1, total_entries // 100)
+
     for idx, entry in enumerate(toc_entries):
-        if progress_callback:
+        if progress_callback and (idx % update_step == 0 or idx == total_entries - 1):
             progress_callback(idx / total_entries, f"Memproses bab {idx+1}/{total_entries}: {entry['title']}")
             
         location_key = (entry["file"], entry["anchor"])
