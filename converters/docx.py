@@ -74,8 +74,13 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
         current_page_text = []
 
     total_paras = len(doc.paragraphs)
+
+    # ⚡ Bolt: Throttling Streamlit UI updates to max ~100 times per document
+    # Updating UI thousands of times blocks the main thread and drastically slows down conversion.
+    update_step = max(1, total_paras // 100)
+
     for i, para in enumerate(doc.paragraphs):
-        if progress_callback:
+        if progress_callback and (i % update_step == 0 or i == total_paras - 1):
             progress_callback(i / total_paras, f"Memproses paragraf {i+1}/{total_paras}")
             
         style_name = para.style.name

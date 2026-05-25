@@ -1,0 +1,3 @@
+## 2024-05-24 - Streamlit UI Update Overhead in Tight Loops
+**Learning:** Calling Streamlit UI update functions (like `st.progress` or `st.text`) inside tight loops (like iterating over every paragraph in a DOCX file) drastically degrades performance because these updates are synchronous and involve WebSocket communication overhead. For a 10,000-paragraph document, this blocks the main thread 10,000 times.
+**Action:** Always throttle UI updates in loops (e.g., updating only every `N` iterations, or limiting total updates to ~100 with `max(1, total // 100)`) to maintain fast backend processing speeds without sacrificing user feedback.
