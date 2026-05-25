@@ -106,7 +106,7 @@ TEXTS = {
     }
 }
 
-st.set_page_config(page_title="Universal E-Book to SQLite Converter", layout="centered")
+st.set_page_config(page_title="Universal E-Book to SQLite Converter", page_icon="📚", layout="centered")
 
 # --- Language Selection ---
 lang = st.sidebar.selectbox("Language / Bahasa", options=["id", "en"], format_func=lambda x: "Bahasa Indonesia" if x == "id" else "English")
@@ -117,9 +117,9 @@ st.markdown(t["header_desc"])
 
 # --- Sidebar for Options ---
 st.sidebar.header(t["config_header"])
-page_marker = st.sidebar.text_input(t["page_marker_label"], value="", help=t["page_marker_help"])
-footnote_markers = st.sidebar.text_input(t["footnote_markers_label"], value="¬,(¬", help=t["footnote_markers_help"])
-footnote_sep = st.sidebar.text_input(t["footnote_sep_label"], value="", help=t["footnote_sep_help"])
+page_marker = st.sidebar.text_input(t["page_marker_label"], value="", placeholder="@", help=t["page_marker_help"])
+footnote_markers = st.sidebar.text_input(t["footnote_markers_label"], value="¬,(¬", placeholder="¬,(¬", help=t["footnote_markers_help"])
+footnote_sep = st.sidebar.text_input(t["footnote_sep_label"], value="", placeholder="---", help=t["footnote_sep_help"])
 parts_spec = st.sidebar.text_area(t["parts_label"], value="", placeholder="1:1,747:2", help=t["parts_help"])
 
 st.sidebar.divider()
@@ -131,7 +131,7 @@ detect_dir = st.sidebar.checkbox(t["detect_dir_label"], value=False, help=t["det
 
 st.sidebar.divider()
 st.sidebar.header(t["filter_header"])
-skip_ids = st.sidebar.text_input(t["skip_ids_label"], value="", help=t["skip_ids_help"])
+skip_ids = st.sidebar.text_input(t["skip_ids_label"], value="", placeholder="1,2,5-10", help=t["skip_ids_help"])
 max_len_skip = st.sidebar.number_input(t["max_len_label"], value=0, help=t["max_len_help"])
 
 # --- File Uploader ---
