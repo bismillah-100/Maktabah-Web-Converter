@@ -1,3 +1,0 @@
-## 2024-05-24 - Precompiled Regexes vs Generators
-**Learning:** In text-heavy processing like `is_arabic` and `wrap_direction`, using Python generators (e.g., `any('\u0600' <= c <= '\u06FF' for c in text)`) is significantly slower than using compiled regular expressions (`re.compile(r'[\u0600-\u06FF]')`). Python caches regexes, but precompiling them at the module level avoids even the cache-lookup overhead on every function call.
-**Action:** When performing intensive string inspection or manipulation, prefer precompiled regular expressions over Python-level loops or generator expressions to push the iteration down to C level.
