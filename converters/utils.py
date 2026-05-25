@@ -1,6 +1,13 @@
 import sqlite3
 import re
 
+# ⚡ Bolt: Precompiled regular expressions for better string processing performance
+COLLAPSE_NEWLINES_RE = re.compile(r'\n\s*\n+')
+ARABIC_CHAR_RE = re.compile(r'[\u0600-\u06FF]')
+LEADING_NUMBERS_RE = re.compile(r'^\d+[\.\s]*')
+CAPITALIZE_RE = re.compile(r"[A-Za-z]+('[A-Za-z]+)?")
+LATIN_CHAR_RE = re.compile(r'[a-zA-Z]')
+
 def parse_parts(parts_str):
     if not parts_str:
         return []
@@ -81,12 +88,12 @@ def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
 
     if collapse_newlines:
         # Replace 2 or more newlines with a single newline
-        text = re.sub(r'\n\s*\n+', '\n', text)
+        text = COLLAPSE_NEWLINES_RE.sub('\n', text)
     return text.strip()
 
 def is_arabic(text):
     # Basic check for Arabic characters range
-    return any('\u0600' <= c <= '\u06FF' for c in text)
+    return bool(ARABIC_CHAR_RE.search(text))
 
 def clean_toc_title(title, remove_numbers=False, fix_capitalization=False):
     if not title:
@@ -97,13 +104,13 @@ def clean_toc_title(title, remove_numbers=False, fix_capitalization=False):
     if remove_numbers:
         # Remove leading numbers followed by dots, spaces or directly text
         # e.g. "0018. Judul" -> "Judul", "1. Judul" -> "Judul"
-        res = re.sub(r'^\d+[\.\s]*', '', res).strip()
+        res = LEADING_NUMBERS_RE.sub('', res).strip()
     
     if fix_capitalization and not is_arabic(res):
         # Improved Title Case that doesn't capitalize after apostrophes
         # res.title() makes "Al-Qur'an" -> "Al-Qur'An"
         # We use regex to capitalize only the first letter of each word
-        res = re.sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda mo: mo.group(0).capitalize(), res)
+        res = CAPITALIZE_RE.sub(lambda mo: mo.group(0).capitalize(), res)
         
     return res
 
@@ -147,8 +154,8 @@ def wrap_direction(text, enable=False):
             continue
             
         # Count Latin vs Arabic/RTL
-        latin_count = len(re.findall(r'[a-zA-Z]', stripped))
-        arabic_count = len(re.findall(r'[\u0600-\u06FF]', stripped))
+        latin_count = len(LATIN_CHAR_RE.findall(stripped))
+        arabic_count = len(ARABIC_CHAR_RE.findall(stripped))
         
         if latin_count > arabic_count:
             # Predominantly LTR
