@@ -3,3 +3,6 @@
 **Action:** When building or modifying Streamlit interfaces, always ensure that the primary action on the page uses `type="primary"` and is sized appropriately (e.g., full width) to guide user interaction clearly.## 2024-05-18 - Streamlit Inputs Placeholder Pattern
 **Learning:** Adding `placeholder` values to Streamlit `st.text_input` and `st.text_area` provides excellent immediate zero-state guidance without users needing to hover over help tooltips. Setting `page_icon` in `st.set_page_config` is a quick way to improve the browser tab's visual polish.
 **Action:** Always check if text inputs have placeholders, especially when specific formats are expected. Also ensure page configuration has a relevant icon.
+## 2024-08-16 - Add Empty States to File Uploaders
+**Learning:** Streamlit apps often leave empty spaces when file uploaders haven't received a file yet, making the interface feel bare or confusing.
+**Action:** When a file uploader `is None`, show a clear empty state message using `st.info` (with an icon) directing users to upload a file to begin the process. This improves perceived responsiveness and gives users a clear next step.

@@ -53,7 +53,8 @@ TEXTS = {
 - **Footnote Separator**: Jika Anda memiliki baris pemisah khusus antara teks dan footnote, masukkan di sini agar otomatis diubah menjadi format standar Maktabah (`__________`).
 - **Deteksi RTL/LTR**: Fitur ini menyisipkan karakter transparan agar aplikasi Maktabah secara otomatis mengatur rata kanan/kiri.
         """,
-        "info_cloud": "Aplikasi ini berjalan tanpa server pribadi menggunakan Streamlit Cloud."
+        "info_cloud": "Aplikasi ini berjalan tanpa server pribadi menggunakan Streamlit Cloud.",
+        "empty_state": "Silakan unggah file EPUB atau DOCX untuk memulai konversi."
     },
     "en": {
         "title": "📚 E-Book to SQLite Converter",
@@ -102,7 +103,8 @@ TEXTS = {
 - **Footnote Separator**: If you have a specific separator line between text and footnotes, enter it here to automatically convert it to the standard Maktabah format (`__________`).
 - **Detect RTL/LTR**: This feature inserts transparent characters so the Maktabah app automatically handles right/left alignment.
         """,
-        "info_cloud": "This application runs without a private server using Streamlit Cloud."
+        "info_cloud": "This application runs without a private server using Streamlit Cloud.",
+        "empty_state": "Please upload an EPUB or DOCX file to begin conversion."
     }
 }
 
@@ -203,6 +205,8 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"{t['error']} {e}")
                 st.exception(e)
+else:
+    st.info(t["empty_state"], icon="ℹ️")
 
 st.divider()
 st.divider()
