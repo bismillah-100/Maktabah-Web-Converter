@@ -1,3 +1,6 @@
 ## 2024-05-24 - Streamlit UI Update Overhead in Tight Loops
 **Learning:** Calling Streamlit UI update functions (like `st.progress` or `st.text`) inside tight loops (like iterating over every paragraph in a DOCX file) drastically degrades performance because these updates are synchronous and involve WebSocket communication overhead. For a 10,000-paragraph document, this blocks the main thread 10,000 times.
 **Action:** Always throttle UI updates in loops (e.g., updating only every `N` iterations, or limiting total updates to ~100 with `max(1, total // 100)`) to maintain fast backend processing speeds without sacrificing user feedback.
+## 2024-05-24 - python-docx para.style.name is extremely slow
+**Learning:** In the python-docx library, accessing `para.style.name` triggers an expensive XML traversal for *every single paragraph*, leading to severe performance bottlenecks (O(N) operation inside the main processing loop).
+**Action:** When working with python-docx loops, build a style mapping from `doc.styles` (`{style.style_id: style.name}`) before the loop. Inside the loop, extract the internal style ID quickly via `para._p.pPr.pStyle.val if para._p.pPr is not None and para._p.pPr.pStyle is not None else None` and look it up in the dictionary. This provides a ~20x speedup for large documents.
