@@ -207,6 +207,7 @@ if uploaded_file is not None:
                 st.exception(e)
 else:
     st.info(t["empty_state"], icon="ℹ️")
+    st.button(t["convert_btn"], type="primary", use_container_width=True, disabled=True, help=t["empty_state"])
 
 st.divider()
 st.divider()
