@@ -139,29 +139,55 @@ def wrap_direction(text, enable=False):
     if not enable or not text:
         return text
     
-    lines = text.split("\n")
-    wrapped_lines = []
-    
-    # Unicode Control Characters
     LRE = "\u202A" # Left-to-Right Embedding
     RLE = "\u202B" # Right-to-Left Embedding
     PDF = "\u202C" # Pop Directional Formatting (Closer)
     
+    # ⚡ Bolt: Fast path - if the entire text contains no Arabic characters AND
+    # there is at least one Latin character, we avoid regex counting and safely
+    # assume all non-empty lines are LTR. If neither exist, we cannot assume LTR
+    # because the original logic defaults to RTL if latin_count > arabic_count is false (0 > 0).
+    if not ARABIC_CHAR_RE.search(text) and LATIN_CHAR_RE.search(text):
+        lines = text.split("\n")
+        wrapped_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                wrapped_lines.append(line)
+            else:
+                # Ensure the line itself has Latin text to be LTR, else default to RTL
+                if LATIN_CHAR_RE.search(stripped):
+                    wrapped_lines.append(f"{LRE}{stripped}{PDF}")
+                else:
+                    wrapped_lines.append(f"{RLE}{stripped}{PDF}")
+        return "\n".join(wrapped_lines)
+
+    lines = text.split("\n")
+    wrapped_lines = []
+
     for line in lines:
         stripped = line.strip()
         if not stripped:
             wrapped_lines.append(line)
             continue
             
-        # Count Latin vs Arabic/RTL
-        latin_count = len(LATIN_CHAR_RE.findall(stripped))
-        arabic_count = len(ARABIC_CHAR_RE.findall(stripped))
-        
-        if latin_count > arabic_count:
-            # Predominantly LTR
-            wrapped_lines.append(f"{LRE}{stripped}{PDF}")
+        # ⚡ Bolt: Fast path for individual lines
+        if not ARABIC_CHAR_RE.search(stripped):
+            # Slow path default behavior for 0 > 0 is false (RTL)
+            if LATIN_CHAR_RE.search(stripped):
+                wrapped_lines.append(f"{LRE}{stripped}{PDF}")
+            else:
+                wrapped_lines.append(f"{RLE}{stripped}{PDF}")
         else:
-            # Predominantly RTL
-            wrapped_lines.append(f"{RLE}{stripped}{PDF}")
+            # Slow path: line contains Arabic, so we must count to find predominance
+            latin_count = len(LATIN_CHAR_RE.findall(stripped))
+            arabic_count = len(ARABIC_CHAR_RE.findall(stripped))
+
+            if latin_count > arabic_count:
+                # Predominantly LTR
+                wrapped_lines.append(f"{LRE}{stripped}{PDF}")
+            else:
+                # Predominantly RTL
+                wrapped_lines.append(f"{RLE}{stripped}{PDF}")
             
     return "\n".join(wrapped_lines)
