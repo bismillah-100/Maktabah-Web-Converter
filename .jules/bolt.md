@@ -4,3 +4,7 @@
 ## 2024-05-24 - python-docx para.style.name is extremely slow
 **Learning:** In the python-docx library, accessing `para.style.name` triggers an expensive XML traversal for *every single paragraph*, leading to severe performance bottlenecks (O(N) operation inside the main processing loop).
 **Action:** When working with python-docx loops, build a style mapping from `doc.styles` (`{style.style_id: style.name}`) before the loop. Inside the loop, extract the internal style ID quickly via `para._p.pPr.pStyle.val if para._p.pPr is not None and para._p.pPr.pStyle is not None else None` and look it up in the dictionary. This provides a ~20x speedup for large documents.
+
+## 2024-05-27 - Fast-path re.search() over re.findall()
+**Learning:** Python's `re.findall()` for counting characters is significantly slower than `re.search()`, especially when iterating over thousands of lines. In document processing where a feature (like RTL detection) relies on regex character counting, doing this for *every line* introduces a massive bottleneck.
+**Action:** When performing regex counting for document analysis, always precede it with a fast-path `re.search()` to skip the expensive counting entirely if the target pattern (e.g., Arabic characters) isn't present in the line or text chunk at all.
