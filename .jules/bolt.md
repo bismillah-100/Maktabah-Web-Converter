@@ -8,3 +8,7 @@
 ## 2024-05-27 - Fast-path re.search() over re.findall()
 **Learning:** Python's `re.findall()` for counting characters is significantly slower than `re.search()`, especially when iterating over thousands of lines. In document processing where a feature (like RTL detection) relies on regex character counting, doing this for *every line* introduces a massive bottleneck.
 **Action:** When performing regex counting for document analysis, always precede it with a fast-path `re.search()` to skip the expensive counting entirely if the target pattern (e.g., Arabic characters) isn't present in the line or text chunk at all.
+
+## 2024-05-24 - Unnecessary Deepcopy in lxml Processing
+**Learning:** In `converters/epub.py`, `extract_section` makes two deep copies of the lxml element tree: one when appending to `content_parts`, and another when creating `clean_copy` from `temp_wrapper`. Since `temp_wrapper` is constructed fresh and `raw_html` is generated immediately as a string, the second deep copy is completely redundant because `temp_wrapper` can be safely modified in-place by `clean_html_tree` afterwards.
+**Action:** Avoid redundant `copy.deepcopy()` operations on lxml etrees, as they are relatively expensive. Instead, construct a single working tree, serialize it to a string if you need the raw HTML, and then modify that working tree directly for the clean text extraction.
