@@ -103,7 +103,10 @@ def extract_section(doc, anchor, next_anchor):
     raw_html = etree.tostring(temp_wrapper, encoding="unicode", method="html")
     ids_included = [e.get("id") for e in temp_wrapper.xpath("//*[@id]") if e.get("id")]
 
-    clean_copy = copy.deepcopy(temp_wrapper)
+    # ⚡ Bolt: Removed redundant deep copy.
+    # temp_wrapper is constructed fresh above and can be mutated safely
+    # after raw_html is serialized. This improves EPUB processing speed.
+    clean_copy = temp_wrapper
     clean_html_tree(clean_copy)
     clean_inner = get_inner_html(clean_copy).strip()
 
