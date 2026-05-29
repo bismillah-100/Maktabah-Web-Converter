@@ -142,7 +142,16 @@ uploaded_file = st.file_uploader(t["uploader_label"], type=["epub", "docx"])
 if uploaded_file is not None:
     file_extension = os.path.splitext(uploaded_file.name)[1].lower()
     
+    # Use uploaded_file.file_id to ensure a unique key for each upload, even if filename is the same
+    state_key = f"converted_{uploaded_file.file_id}"
+    path_key = f"output_path_{uploaded_file.file_id}"
+
+    if state_key not in st.session_state:
+        st.session_state[state_key] = False
+        st.session_state[path_key] = ""
+
     if st.button(t["convert_btn"], type="primary", use_container_width=True):
+        st.session_state[state_key] = False
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -187,24 +196,29 @@ if uploaded_file is not None:
 
                 update_progress(1.0, "Done!" if lang == "en" else "Selesai!")
 
-                # 4. Download button
                 if success:
-                    st.success(t["success"])
-                    with open(output_path, "rb") as f:
-                        st.download_button(
-                            label=t["download_btn"],
-                            data=f,
-                            file_name=output_filename,
-                            mime="application/x-sqlite3",
-                            type="primary",
-                            use_container_width=True
-                        )
+                    st.session_state[state_key] = True
+                    st.session_state[path_key] = output_path
                 
                 if os.path.exists(input_path): os.remove(input_path)
 
             except Exception as e:
                 st.error(f"{t['error']} {e}")
                 st.exception(e)
+
+    # 4. Download button
+    if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
+        st.success(t["success"])
+        output_filename = os.path.basename(st.session_state[path_key])
+        with open(st.session_state[path_key], "rb") as f:
+            st.download_button(
+                label=t["download_btn"],
+                data=f,
+                file_name=output_filename,
+                mime="application/x-sqlite3",
+                type="primary",
+                use_container_width=True
+            )
 else:
     st.info(t["empty_state"], icon="ℹ️")
     st.button(t["convert_btn"], type="primary", use_container_width=True, disabled=True, help=t["empty_state"])

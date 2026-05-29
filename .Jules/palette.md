@@ -9,3 +9,6 @@
 ## 2024-06-25 - Improve CTA Button Discoverability with Disabled States
 **Learning:** In Streamlit, hiding primary action buttons (like "Convert") completely when prerequisites are missing can cause confusing layout shifts and reduces discoverability. Users don't know where the primary action will eventually appear.
 **Action:** Show primary action buttons with `disabled=True` and a helpful `help="..."` tooltip explaining the prerequisite (e.g., "Please upload a file") rather than omitting the `st.button` call entirely. This provides better spatial consistency and clearer guidance.
+## 2024-11-20 - Prevent Streamlit Download Button Disappearance
+**Learning:** In Streamlit, nesting `st.download_button` inside a conditional block triggered by `st.button()` causes the download button to disappear immediately upon click. This happens because clicking the download button triggers a script rerun, resetting the parent button's state to `False`.
+**Action:** When creating a download button that appears after a process triggered by `st.button()`, store the process completion status and necessary data (like file paths) in `st.session_state`. Then, conditionally render the `st.download_button` outside the `st.button()` block based on the session state.
