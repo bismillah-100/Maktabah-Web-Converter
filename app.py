@@ -166,9 +166,10 @@ if uploaded_file is not None:
                     tmp_input.write(uploaded_file.getvalue())
                     input_path = tmp_input.name
 
-                # 2. Prepare output path
-                output_filename = os.path.splitext(uploaded_file.name)[0] + ".sqlite"
-                output_path = os.path.join(tempfile.gettempdir(), output_filename)
+                # 2. Prepare safe output path using temporary file
+                # 🛡️ Sentinel: Fix path traversal. Don't trust uploaded_file.name
+                fd, output_path = tempfile.mkstemp(suffix=".sqlite")
+                os.close(fd) # Close file descriptor, we just need the safe path
 
                 # 3. Run conversion
                 success = False
@@ -209,12 +210,14 @@ if uploaded_file is not None:
     # 4. Download button
     if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
         st.success(t["success"])
-        output_filename = os.path.basename(st.session_state[path_key])
+        # 🛡️ Sentinel: Sanitize user input for download filename
+        safe_original_name = os.path.basename(uploaded_file.name)
+        download_filename = os.path.splitext(safe_original_name)[0] + ".sqlite"
         with open(st.session_state[path_key], "rb") as f:
             st.download_button(
                 label=t["download_btn"],
                 data=f,
-                file_name=output_filename,
+                file_name=download_filename,
                 mime="application/x-sqlite3",
                 type="primary",
                 use_container_width=True
