@@ -118,23 +118,21 @@ st.title(t["title"])
 st.markdown(t["header_desc"])
 
 # --- Sidebar for Options ---
-st.sidebar.header(t["config_header"])
-page_marker = st.sidebar.text_input(t["page_marker_label"], value="", placeholder="@", help=t["page_marker_help"])
-footnote_markers = st.sidebar.text_input(t["footnote_markers_label"], value="¬,(¬", placeholder="¬,(¬", help=t["footnote_markers_help"])
-footnote_sep = st.sidebar.text_input(t["footnote_sep_label"], value="", placeholder="---", help=t["footnote_sep_help"])
-parts_spec = st.sidebar.text_area(t["parts_label"], value="", placeholder="1:1,747:2", help=t["parts_help"])
+with st.sidebar.expander(t["config_header"], expanded=True):
+    page_marker = st.text_input(t["page_marker_label"], value="", placeholder="@", help=t["page_marker_help"])
+    footnote_markers = st.text_input(t["footnote_markers_label"], value="¬,(¬", placeholder="¬,(¬", help=t["footnote_markers_help"])
+    footnote_sep = st.text_input(t["footnote_sep_label"], value="", placeholder="---", help=t["footnote_sep_help"])
+    parts_spec = st.text_area(t["parts_label"], value="", placeholder="1:1,747:2", help=t["parts_help"])
 
-st.sidebar.divider()
-st.sidebar.header(t["cleaning_header"])
-collapse_newlines = st.sidebar.checkbox(t["collapse_newlines_label"], value=True, help=t["collapse_newlines_help"])
-clean_toc = st.sidebar.checkbox(t["clean_toc_label"], value=False, help=t["clean_toc_help"])
-fix_cap = st.sidebar.checkbox(t["fix_cap_label"], value=False, help=t["fix_cap_help"])
-detect_dir = st.sidebar.checkbox(t["detect_dir_label"], value=False, help=t["detect_dir_help"])
+with st.sidebar.expander(t["cleaning_header"], expanded=False):
+    collapse_newlines = st.checkbox(t["collapse_newlines_label"], value=True, help=t["collapse_newlines_help"])
+    clean_toc = st.checkbox(t["clean_toc_label"], value=False, help=t["clean_toc_help"])
+    fix_cap = st.checkbox(t["fix_cap_label"], value=False, help=t["fix_cap_help"])
+    detect_dir = st.checkbox(t["detect_dir_label"], value=False, help=t["detect_dir_help"])
 
-st.sidebar.divider()
-st.sidebar.header(t["filter_header"])
-skip_ids = st.sidebar.text_input(t["skip_ids_label"], value="", placeholder="1,2,5-10", help=t["skip_ids_help"])
-max_len_skip = st.sidebar.number_input(t["max_len_label"], value=0, help=t["max_len_help"])
+with st.sidebar.expander(t["filter_header"], expanded=False):
+    skip_ids = st.text_input(t["skip_ids_label"], value="", placeholder="1,2,5-10", help=t["skip_ids_help"])
+    max_len_skip = st.number_input(t["max_len_label"], min_value=0, step=100, value=0, help=t["max_len_help"])
 
 # --- File Uploader ---
 uploaded_file = st.file_uploader(t["uploader_label"], type=["epub", "docx"])
@@ -200,11 +198,13 @@ if uploaded_file is not None:
                 if success:
                     st.session_state[state_key] = True
                     st.session_state[path_key] = output_path
+                    st.toast(t["success"], icon="✅")
                 
                 if os.path.exists(input_path): os.remove(input_path)
 
             except Exception as e:
                 st.error(f"{t['error']} {e}")
+                st.toast(f"{t['error']} {str(e)}", icon="❌")
                 st.exception(e)
 
     # 4. Download button

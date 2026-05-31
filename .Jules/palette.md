@@ -12,3 +12,6 @@
 ## 2024-11-20 - Prevent Streamlit Download Button Disappearance
 **Learning:** In Streamlit, nesting `st.download_button` inside a conditional block triggered by `st.button()` causes the download button to disappear immediately upon click. This happens because clicking the download button triggers a script rerun, resetting the parent button's state to `False`.
 **Action:** When creating a download button that appears after a process triggered by `st.button()`, store the process completion status and necessary data (like file paths) in `st.session_state`. Then, conditionally render the `st.download_button` outside the `st.button()` block based on the session state.
+## 2024-11-20 - Progressive Disclosure in Streamlit Sidebars
+**Learning:** Displaying too many configuration options at once in a Streamlit sidebar can overwhelm users and cause visual clutter, especially when many options are only needed for advanced use cases.
+**Action:** Use `st.sidebar.expander` to group related configuration inputs. Keep the most common or critical configurations expanded by default, and collapse the more advanced options. This progressive disclosure makes the UI cleaner and less intimidating while still providing necessary functionality.
