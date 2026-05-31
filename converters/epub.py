@@ -73,13 +73,21 @@ def extract_section(doc, anchor, next_anchor):
 
     content_parts = []
 
+    # ⚡ Bolt: Cache next_anchor ancestors to avoid slow O(N) xpath descendant queries inside loops
+    break_nodes = set()
+    if next_anchor:
+        target_nodes = doc.xpath(f"//*[@id='{next_anchor}']")
+        if target_nodes:
+            curr = target_nodes[0]
+            while curr is not None:
+                break_nodes.add(curr)
+                curr = curr.getparent()
+
     if not anchor:
         iterator = body.iterchildren()
         for el in iterator:
             if next_anchor:
-                if el.get("id") == next_anchor:
-                    break
-                if el.xpath(f".//*[@id='{next_anchor}']"):
+                if el.get("id") == next_anchor or el in break_nodes:
                     break
             content_parts.append(copy.deepcopy(el))
     else:
@@ -90,9 +98,7 @@ def extract_section(doc, anchor, next_anchor):
         content_parts.append(copy.deepcopy(start_node))
         for el in start_node.itersiblings():
             if next_anchor:
-                if el.get("id") == next_anchor:
-                    break
-                if el.xpath(f".//*[@id='{next_anchor}']"):
+                if el.get("id") == next_anchor or el in break_nodes:
                     break
             content_parts.append(copy.deepcopy(el))
 
