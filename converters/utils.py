@@ -114,10 +114,35 @@ def clean_toc_title(title, remove_numbers=False, fix_capitalization=False):
         
     return res
 
+class SkipIds:
+    """
+    ⚡ Bolt: Lazy evaluation of skipped IDs to prevent memory exhaustion (DoS).
+    Instead of expanding huge numerical ranges into a memory-heavy set()
+    (e.g., "1-1000000"), we store the range boundaries and perform lightweight
+    O(1) membership checks via __contains__. This significantly reduces
+    memory footprint and parsing time.
+    """
+    def __init__(self):
+        self.singles = set()
+        self.ranges = []
+
+    def __contains__(self, item):
+        if not isinstance(item, (int, float)):
+            return False
+        if item in self.singles:
+            return True
+        for start, end in self.ranges:
+            if start <= item <= end:
+                return True
+        return False
+
+    def __bool__(self):
+        return bool(self.singles) or bool(self.ranges)
+
 def parse_skip_ids(skip_str):
     if not skip_str:
-        return set()
-    ids = set()
+        return SkipIds()
+    ids = SkipIds()
     for segment in skip_str.split(","):
         segment = segment.strip()
         if not segment:
@@ -125,12 +150,12 @@ def parse_skip_ids(skip_str):
         if "-" in segment:
             try:
                 start, end = map(int, segment.split("-"))
-                ids.update(range(start, end + 1))
+                ids.ranges.append((start, end))
             except ValueError:
                 pass
         else:
             try:
-                ids.add(int(segment))
+                ids.singles.add(int(segment))
             except ValueError:
                 pass
     return ids

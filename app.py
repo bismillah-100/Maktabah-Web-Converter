@@ -37,6 +37,7 @@ TEXTS = {
         "processing": "Sedang memproses...",
         "success": "Konversi Berhasil!",
         "download_btn": "📥 Unduh SQLite",
+        "download_help": "Impor file SQLite ini ke aplikasi Maktabah Anda.",
         "error": "Terjadi kesalahan:",
         "guide_title": "📖 Panduan Penggunaan",
         "guide_content": """
@@ -87,6 +88,7 @@ TEXTS = {
         "processing": "Processing...",
         "success": "Conversion Successful!",
         "download_btn": "📥 Download SQLite",
+        "download_help": "Import this SQLite file into your Maktabah application.",
         "error": "An error occurred:",
         "guide_title": "📖 Usage Guide",
         "guide_content": """
@@ -213,14 +215,23 @@ if uploaded_file is not None:
         # 🛡️ Sentinel: Sanitize user input for download filename
         safe_original_name = os.path.basename(uploaded_file.name)
         download_filename = os.path.splitext(safe_original_name)[0] + ".sqlite"
+
+        file_size_bytes = os.path.getsize(st.session_state[path_key])
+        if file_size_bytes < 1024 * 1024:
+            file_size_fmt = f"{file_size_bytes / 1024:.1f} KB"
+        else:
+            file_size_fmt = f"{file_size_bytes / (1024 * 1024):.1f} MB"
+        btn_label = f"{t['download_btn']} ({file_size_fmt})"
+
         with open(st.session_state[path_key], "rb") as f:
             st.download_button(
-                label=t["download_btn"],
+                label=btn_label,
                 data=f,
                 file_name=download_filename,
                 mime="application/x-sqlite3",
                 type="primary",
-                use_container_width=True
+                use_container_width=True,
+                help=t["download_help"]
             )
 else:
     st.info(t["empty_state"], icon="ℹ️")
