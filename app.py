@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import tempfile
+import logging
 from converters.epub import process_epub
 from converters.docx import process_docx
 
@@ -205,9 +206,9 @@ if uploaded_file is not None:
                 if os.path.exists(input_path): os.remove(input_path)
 
             except Exception as e:
-                st.error(f"{t['error']} {e}")
-                st.toast(f"{t['error']} {str(e)}", icon="❌")
-                st.exception(e)
+                logging.error("Conversion failed", exc_info=e)
+                st.error(f"{t['error']} {type(e).__name__}")
+                st.toast(f"{t['error']} {type(e).__name__}", icon="❌")
 
     # 4. Download button
     if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
