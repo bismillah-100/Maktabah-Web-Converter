@@ -152,12 +152,10 @@ if uploaded_file is not None:
 
     if st.button(t["convert_btn"], type="primary", use_container_width=True):
         st.session_state[state_key] = False
-        progress_bar = st.progress(0)
-        status_text = st.empty()
+        progress_bar = st.progress(0, text=t["processing"])
         
         def update_progress(percent, text):
-            progress_bar.progress(percent)
-            status_text.text(text)
+            progress_bar.progress(percent, text=text)
 
         with st.spinner(t["processing"]):
             try:
@@ -237,7 +235,6 @@ else:
     st.info(t["empty_state"], icon="ℹ️")
     st.button(t["convert_btn"], type="primary", use_container_width=True, disabled=True, help=t["empty_state"])
 
-st.divider()
 st.divider()
 
 with st.expander(t["guide_title"]):
