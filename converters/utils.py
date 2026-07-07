@@ -26,8 +26,8 @@ def parse_parts(parts_str):
 
 def parse_footnote_markers(markers_str):
     if not markers_str:
-        return []
-    return [m.strip() for m in markers_str.split(",") if m.strip()]
+        return ()
+    return tuple(m.strip() for m in markers_str.split(",") if m.strip())
 
 def setup_database(db_path, book_id):
     conn = sqlite3.connect(db_path)
