@@ -149,7 +149,8 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
         scanning = True
         for j, line in enumerate(clean_lines):
             stripped = line.strip()
-            is_footnote = any(stripped.startswith(m) for m in footnote_markers) if footnote_markers else False
+            # ⚡ Bolt: Use tuple with str.startswith() for faster O(C) check instead of any() generator
+            is_footnote = stripped.startswith(footnote_markers) if footnote_markers else False
             if scanning:
                 if is_footnote or stripped == "":
                     footnote_clean.append(line)
