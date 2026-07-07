@@ -114,7 +114,7 @@ TEXTS = {
 st.set_page_config(page_title="Universal E-Book to SQLite Converter", page_icon="📚", layout="centered")
 
 # --- Language Selection ---
-lang = st.sidebar.selectbox("Language / Bahasa", options=["id", "en"], format_func=lambda x: "Bahasa Indonesia" if x == "id" else "English")
+lang = st.sidebar.selectbox("🌐 Language / Bahasa", options=["id", "en"], format_func=lambda x: "🇮🇩 Bahasa Indonesia" if x == "id" else "🇬🇧 English")
 t = TEXTS[lang]
 
 st.title(t["title"])

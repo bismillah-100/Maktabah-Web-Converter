@@ -15,3 +15,6 @@
 ## 2024-11-20 - Progressive Disclosure in Streamlit Sidebars
 **Learning:** Displaying too many configuration options at once in a Streamlit sidebar can overwhelm users and cause visual clutter, especially when many options are only needed for advanced use cases.
 **Action:** Use `st.sidebar.expander` to group related configuration inputs. Keep the most common or critical configurations expanded by default, and collapse the more advanced options. This progressive disclosure makes the UI cleaner and less intimidating while still providing necessary functionality.
+## 2026-07-04 - Enhance Selectbox with Emojis
+**Learning:** Adding Unicode icons or country flags within the format_func and label of text-only selectboxes provides immediate visual context and improves user scannability without requiring custom CSS.
+**Action:** Apply this pattern to standardized items (like languages or countries) in Streamlit applications.
