@@ -7,3 +7,7 @@
 **Vulnerability:** The application used `st.exception(e)` to render exceptions in the UI, and passed the raw exception object `e` to `st.error()` and `st.toast()`.
 **Learning:** `st.exception(e)` displays full internal stack traces and server environment paths to end users, exposing sensitive internal structure that attackers can use to craft targeted attacks. Passing raw exception objects into string formatting or UI components can also expose sensitive data.
 **Prevention:** Avoid using `st.exception()` in production applications. Always catch exceptions, log the full error stack internally using `logging.error(..., exc_info=e)`, and present a sanitized, generic error message (e.g., using just the exception class name) to the user via `st.error()` or `st.toast()`.
+## 2024-07-04 - XPath Injection in EPUB Parser
+**Vulnerability:** String-interpolated XPath queries in `converters/epub.py` (`doc.xpath(f"//*[@id='{anchor}']")`) allowed potential XPath injection if an EPUB contained maliciously crafted anchor IDs.
+**Learning:** `lxml`'s `xpath()` function evaluates the entire string. If user-controlled data (like EPUB anchor IDs) is injected directly via f-strings, it can break out of the string literal and alter the query structure.
+**Prevention:** Always use parameterized XPath variables for dynamic values (e.g., `doc.xpath("//*[@id=$anc]", anc=anchor)`) to ensure the input is treated strictly as a string literal by the XPath engine.
