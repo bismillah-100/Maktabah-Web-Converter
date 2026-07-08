@@ -11,3 +11,8 @@
 **Vulnerability:** String-interpolated XPath queries in `converters/epub.py` (`doc.xpath(f"//*[@id='{anchor}']")`) allowed potential XPath injection if an EPUB contained maliciously crafted anchor IDs.
 **Learning:** `lxml`'s `xpath()` function evaluates the entire string. If user-controlled data (like EPUB anchor IDs) is injected directly via f-strings, it can break out of the string literal and alter the query structure.
 **Prevention:** Always use parameterized XPath variables for dynamic values (e.g., `doc.xpath("//*[@id=$anc]", anc=anchor)`) to ensure the input is treated strictly as a string literal by the XPath engine.
+
+## 2026-07-08 - SQL Injection in Dynamic Table Names
+**Vulnerability:** SQL Injection in DML Queries due to unvalidated `book_id` being interpolated into table names.
+**Learning:** Using user-provided strings to construct table names (e.g., `f"b{book_id}"`) can lead to SQL injection if not properly sanitized, even if parameterization is used for values.
+**Prevention:** Always validate and sanitize variables used for table names. In Python, ensure identifiers match a safe regex pattern like `^\w+$` before concatenating them into SQL statements.
