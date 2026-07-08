@@ -211,6 +211,8 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
     # Updating UI thousands of times blocks the main thread and drastically slows down conversion.
     update_step = max(1, total_entries // 100)
 
+    table_b_inserts = []
+
     for idx, entry in enumerate(toc_entries):
         if progress_callback and (idx % update_step == 0 or idx == total_entries - 1):
             progress_callback(idx / total_entries, f"Memproses bab {idx+1}/{total_entries}: {entry['title']}")
@@ -264,10 +266,7 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
 
                         part = get_part(global_id, part_boundaries)
 
-                        cur.execute(
-                            f"INSERT INTO {table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
-                            (chunk_clean, part, global_id, current_page_number),
-                        )
+                        table_b_inserts.append((chunk_clean, part, global_id, current_page_number))
 
                         if not first_assigned:
                             toc_link_id    = global_id
@@ -298,6 +297,12 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
                 (clean_tit, entry["lvl"], 0, toc_link_id),
             )
             processed_titles[clean_tit] = cur.lastrowid
+
+    if table_b_inserts:
+        cur.executemany(
+            f"INSERT INTO {table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
+            table_b_inserts,
+        )
 
     conn.commit()
     conn.close()
