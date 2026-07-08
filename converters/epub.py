@@ -203,7 +203,8 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
     current_page_number = 1
     xhtml_cache         = {}
     processed_locations = {}
-    processed_titles    = {}
+    processed_titles    = set()
+    toc_inserts         = []
 
     total_entries = len(toc_entries)
 
@@ -293,11 +294,14 @@ def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
             toc_link_id = processed_locations[location_key]
 
         if clean_tit and clean_tit not in processed_titles:
-            cur.execute(
-                f"INSERT INTO {table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
-                (clean_tit, entry["lvl"], 0, toc_link_id),
-            )
-            processed_titles[clean_tit] = cur.lastrowid
+            toc_inserts.append((clean_tit, entry["lvl"], 0, toc_link_id))
+            processed_titles.add(clean_tit)
+
+    if toc_inserts:
+        cur.executemany(
+            f"INSERT INTO {table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
+            toc_inserts,
+        )
 
     conn.commit()
     conn.close()

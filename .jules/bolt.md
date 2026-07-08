@@ -15,3 +15,6 @@
 ## 2024-05-18 - Fast XPath Ancestor Lookups in Loops
 **Learning:** Using `el.xpath(f".//*[@id='{target}']")` inside a tight loop to check if an element contains a target ID forces `lxml` to re-parse and traverse the descendant tree O(N) times, creating a severe bottleneck during EPUB conversion (tested ~1.1s down to ~0.15s).
 **Action:** When searching for when a sibling iteration reaches an element containing a target ID, query the target ID globally once (`doc.xpath()`), trace its `getparent()` chain into a `set()`, and simply check `if el in break_nodes` during iteration for fast O(1) matching.
+## 2024-06-25 - Bulk Insert TOC Elements
+**Learning:** Inserting rows individually within a large loop using `cur.execute` creates an N+1 query vulnerability due to disk I/O latency for each transaction step inside SQLite.
+**Action:** Use `cur.executemany` with a list of parameter tuples to bulk insert database rows at the end of the operation. This bypasses per-iteration overhead.
