@@ -118,6 +118,34 @@ def extract_section(doc, anchor, next_anchor):
 
     return clean_inner, raw_html, ids_included
 
+def process_chunk_lines(clean_lines, raw_lines, footnote_markers):
+    footnote_clean = []
+    footnote_raw   = []
+    body_clean     = []
+    body_raw       = []
+
+    scanning = True
+    for j, line in enumerate(clean_lines):
+        stripped = line.strip()
+        # ⚡ Bolt: Use tuple with str.startswith() for faster O(C) check instead of any() generator
+        is_footnote = stripped.startswith(footnote_markers) if footnote_markers else False
+        if scanning:
+            if is_footnote or stripped == "":
+                footnote_clean.append(line)
+                if j < len(raw_lines):
+                    footnote_raw.append(raw_lines[j])
+            else:
+                scanning = False
+                body_clean.append(line)
+                if j < len(raw_lines):
+                    body_raw.append(raw_lines[j])
+        else:
+            body_clean.append(line)
+            if j < len(raw_lines):
+                body_raw.append(raw_lines[j])
+
+    return footnote_clean, footnote_raw, body_clean, body_raw
+
 def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
     if page_marker and page_marker in raw_html:
         raw_splits  = raw_html.split(page_marker)
@@ -141,30 +169,9 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
         clean_lines = next_clean.split("\n")
         raw_lines   = next_raw.split("\n")
 
-        footnote_clean = []
-        footnote_raw   = []
-        body_clean     = []
-        body_raw       = []
-
-        scanning = True
-        for j, line in enumerate(clean_lines):
-            stripped = line.strip()
-            # ⚡ Bolt: Use tuple with str.startswith() for faster O(C) check instead of any() generator
-            is_footnote = stripped.startswith(footnote_markers) if footnote_markers else False
-            if scanning:
-                if is_footnote or stripped == "":
-                    footnote_clean.append(line)
-                    if j < len(raw_lines):
-                        footnote_raw.append(raw_lines[j])
-                else:
-                    scanning = False
-                    body_clean.append(line)
-                    if j < len(raw_lines):
-                        body_raw.append(raw_lines[j])
-            else:
-                body_clean.append(line)
-                if j < len(raw_lines):
-                    body_raw.append(raw_lines[j])
+        footnote_clean, footnote_raw, body_clean, body_raw = process_chunk_lines(
+            clean_lines, raw_lines, footnote_markers
+        )
 
         if footnote_clean:
             current_clean += "\n" + "\n".join(footnote_clean)
