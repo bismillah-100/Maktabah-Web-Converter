@@ -15,3 +15,6 @@
 ## 2024-05-18 - Fast XPath Ancestor Lookups in Loops
 **Learning:** Using `el.xpath(f".//*[@id='{target}']")` inside a tight loop to check if an element contains a target ID forces `lxml` to re-parse and traverse the descendant tree O(N) times, creating a severe bottleneck during EPUB conversion (tested ~1.1s down to ~0.15s).
 **Action:** When searching for when a sibling iteration reaches an element containing a target ID, query the target ID globally once (`doc.xpath()`), trace its `getparent()` chain into a `set()`, and simply check `if el in break_nodes` during iteration for fast O(1) matching.
+## 2024-05-24 - Pre-compile Regex in Loops
+**Learning:** Using `re.match` inside a loop evaluating thousands of items incurs repeated regex compilation/cache-lookup overhead.
+**Action:** Always extract static regular expression patterns using `re.compile()` before entering a large loop, such as document parsing loops.
