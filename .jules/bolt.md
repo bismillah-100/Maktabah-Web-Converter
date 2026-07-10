@@ -18,3 +18,7 @@
 ## 2024-10-24 - Optimize SQLite row insertions with executemany()
 **Learning:** Even when wrapped in a single transaction, executing `cur.execute()` for thousands of rows inside a Python loop incurs significant DB-API parsing and function call overhead.
 **Action:** When performing bulk row insertions, always accumulate the rows into an in-memory list (or generator) and use `cur.executemany()` instead to bypass loop overhead, which can yield a measurable ~30-40% speedup on inserts.
+
+## 2024-05-24 - Pre-compile Regex in Loops
+**Learning:** Using `re.match` inside a loop evaluating thousands of items incurs repeated regex compilation/cache-lookup overhead.
+**Action:** Always extract static regular expression patterns using `re.compile()` before entering a large loop, such as document parsing loops.

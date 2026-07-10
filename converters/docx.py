@@ -82,6 +82,9 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
     # ⚡ Bolt: Cache styles to avoid slow O(N) lookup from para.style.name in python-docx
     style_map = {style.style_id: style.name for style in doc.styles}
 
+    # ⚡ Bolt: Pre-compile heading regex to avoid per-paragraph compilation overhead
+    heading_pattern = re.compile(r'Heading (\d+)')
+
     for i, para in enumerate(doc.paragraphs):
         if progress_callback and (i % update_step == 0 or i == total_paras - 1):
             progress_callback(i / total_paras, f"Memproses paragraf {i+1}/{total_paras}")
@@ -91,10 +94,10 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
         style_name = style_map.get(style_id, "Normal")
         text = para.text.strip()
         
-        if not text and not re.match(r'Heading (\d+)', style_name):
+        if not text and not heading_pattern.match(style_name):
             continue
 
-        heading_match = re.match(r'Heading (\d+)', style_name)
+        heading_match = heading_pattern.match(style_name)
         if heading_match:
             if current_page_text:
                 flush_page()
