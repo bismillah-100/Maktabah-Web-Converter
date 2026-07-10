@@ -242,7 +242,6 @@ class EpubProcessor:
                 f"INSERT INTO {self.table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
                 self.toc_inserts,
             )
-
         self.conn.commit()
         self.conn.close()
         return True
@@ -316,7 +315,6 @@ class EpubProcessor:
                 f"INSERT INTO {self.table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
                 (chunk_clean, part, self.global_id, self.current_page_number),
             )
-
             if not first_assigned:
                 toc_link_id    = self.global_id
                 first_assigned = True
