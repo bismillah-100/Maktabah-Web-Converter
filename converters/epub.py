@@ -224,6 +224,7 @@ class EpubProcessor:
         self.processed_locations = {}
         self.processed_titles = set()
         self.toc_inserts = []
+        self.table_b_inserts = []
 
     def process(self):
         total_entries = len(self.toc_entries)
@@ -236,6 +237,12 @@ class EpubProcessor:
                 self.progress_callback(idx / total_entries, f"Memproses bab {idx+1}/{total_entries}: {entry['title']}")
 
             self._process_entry(entry, idx)
+
+        if self.table_b_inserts:
+            self.cur.executemany(
+                f"INSERT INTO {self.table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
+                self.table_b_inserts,
+            )
 
         if self.toc_inserts:
             self.cur.executemany(
@@ -311,10 +318,7 @@ class EpubProcessor:
 
             part = get_part(self.global_id, self.part_boundaries)
 
-            self.cur.execute(
-                f"INSERT INTO {self.table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
-                (chunk_clean, part, self.global_id, self.current_page_number),
-            )
+            self.table_b_inserts.append((chunk_clean, part, self.global_id, self.current_page_number))
             if not first_assigned:
                 toc_link_id    = self.global_id
                 first_assigned = True
