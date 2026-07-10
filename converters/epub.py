@@ -222,7 +222,8 @@ class EpubProcessor:
         self.current_page_number = 1
         self.xhtml_cache = {}
         self.processed_locations = {}
-        self.processed_titles = {}
+        self.processed_titles = set()
+        self.toc_inserts = []
 
     def process(self):
         total_entries = len(self.toc_entries)
@@ -236,6 +237,11 @@ class EpubProcessor:
 
             self._process_entry(entry, idx)
 
+        if self.toc_inserts:
+            self.cur.executemany(
+                f"INSERT INTO {self.table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
+                self.toc_inserts,
+            )
         self.conn.commit()
         self.conn.close()
         return True
@@ -260,11 +266,8 @@ class EpubProcessor:
             toc_link_id = self.processed_locations[location_key]
 
         if clean_tit and clean_tit not in self.processed_titles:
-            self.cur.execute(
-                f"INSERT INTO {self.table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
-                (clean_tit, entry["lvl"], 0, toc_link_id),
-            )
-            self.processed_titles[clean_tit] = self.cur.lastrowid
+            self.toc_inserts.append((clean_tit, entry["lvl"], 0, toc_link_id))
+            self.processed_titles.add(clean_tit)
 
     def _process_document(self, doc, entry, idx, location_key):
         next_anchor = None
@@ -312,7 +315,6 @@ class EpubProcessor:
                 f"INSERT INTO {self.table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
                 (chunk_clean, part, self.global_id, self.current_page_number),
             )
-
             if not first_assigned:
                 toc_link_id    = self.global_id
                 first_assigned = True
