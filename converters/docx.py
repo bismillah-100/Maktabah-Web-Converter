@@ -26,8 +26,11 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
     pending_headings = []
     current_page_text = []
 
+    table_b_inserts = []
+    table_t_inserts = []
+
     def flush_page():
-        nonlocal global_id, source_page_counter, current_page_number, current_page_text
+        nonlocal global_id, source_page_counter, current_page_number, current_page_text, table_b_inserts, table_t_inserts
         raw_text = "\n".join(current_page_text).strip()
         text = clean_content_text(raw_text, collapse_newlines=collapse_newlines, footnote_separator=footnote_separator)
         text = wrap_direction(text, enable=detect_dir)
@@ -54,18 +57,12 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
             
         part = get_part(global_id, part_boundaries)
         
-        cur.execute(
-            f"INSERT INTO {table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
-            (text, part, global_id, current_page_number),
-        )
+        table_b_inserts.append((text, part, global_id, current_page_number))
         
         for h_text, h_lvl in pending_headings:
             cleaned_h = clean_toc_title(h_text, remove_numbers=clean_toc, fix_capitalization=fix_cap)
             if cleaned_h:
-                cur.execute(
-                    f"INSERT INTO {table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
-                    (cleaned_h, h_lvl, 0, global_id),
-                )
+                table_t_inserts.append((cleaned_h, h_lvl, 0, global_id))
         pending_headings.clear()
         
         global_id += 1
@@ -118,6 +115,18 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
                 current_page_text.append(text)
 
     flush_page()
+
+    if table_b_inserts:
+        cur.executemany(
+            f"INSERT INTO {table_b} (nass, part, id, page) VALUES (?, ?, ?, ?)",
+            table_b_inserts
+        )
+    if table_t_inserts:
+        cur.executemany(
+            f"INSERT INTO {table_t} (tit, lvl, sub, id) VALUES (?, ?, ?, ?)",
+            table_t_inserts
+        )
+
     conn.commit()
     conn.close()
     return True
