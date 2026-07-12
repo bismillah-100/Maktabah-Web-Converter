@@ -29,3 +29,6 @@
 ## 2024-06-20 - Consolidating Streamlit Progress Bar Elements
 **Learning:** Using `st.empty()` alongside `st.progress()` to show loading text can cause jarring layout shifts when elements populate, creating a disconnected loading state.
 **Action:** Always use the native `text` parameter in `st.progress(..., text="...")` to visually couple the loading bar with its status text and prevent unnecessary DOM repaints/layout shifting.
+## 2024-07-11 - Unicode Icons as Visual Anchors
+**Learning:** Adding Unicode icons to expander headers (⚙️, 🧹, 🔍) and call-to-action buttons (⚡, 📂) provides immediate visual anchors in text-heavy settings menus and improves scannability. This is a lightweight way to enhance UI structure without needing custom CSS or complex component changes.
+**Action:** Consistently use relevant Unicode icons as visual grouping markers in Streamlit sidebars, forms, and primary buttons to improve progressive disclosure and interaction cues.
