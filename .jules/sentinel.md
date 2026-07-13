@@ -16,3 +16,7 @@
 **Vulnerability:** SQL Injection in DML Queries due to unvalidated `book_id` being interpolated into table names.
 **Learning:** Using user-provided strings to construct table names (e.g., `f"b{book_id}"`) can lead to SQL injection if not properly sanitized, even if parameterization is used for values.
 **Prevention:** Always validate and sanitize variables used for table names. In Python, ensure identifiers match a safe regex pattern like `^\w+$` before concatenating them into SQL statements.
+## 2026-07-11 - Stored XSS via Incomplete HTML Tag Stripping
+**Vulnerability:** The `clean_html_tree` function in `converters/epub.py` used `etree.strip_tags()` and `tag.attrib.clear()` but failed to remove dangerous tags like `<script>` or `<style>` and their content, allowing Stored Cross-Site Scripting (XSS).
+**Learning:** `lxml`'s `strip_tags()` only removes the tags themselves and keeps the inner text. Unstripped dangerous tags (and their content) were being preserved in the HTML output, presenting an XSS risk when rendered in a WebView.
+**Prevention:** Always use `etree.strip_elements()` to completely remove dangerous tags AND their content (like `script`, `style`, `iframe`, `object`) before applying formatting cleanup via `strip_tags()`.

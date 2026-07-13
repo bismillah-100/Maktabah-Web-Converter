@@ -49,6 +49,10 @@ def load_xhtml(book, xhtml_cache, file):
         return None
 
 def clean_html_tree(element):
+    # 🛡️ Sentinel: Prevent Stored XSS by completely removing dangerous tags and their content
+    tags_to_kill = ["script", "style", "iframe", "object", "embed", "applet", "noscript"]
+    etree.strip_elements(element, *tags_to_kill, with_tail=False)
+
     tags_to_strip = [
         "div", "span", "section", "article",
         "header", "footer", "a",
