@@ -73,9 +73,14 @@ def get_page_reset_ids(part_boundaries):
         return set()
     return {start_id for start_id, _ in part_boundaries[1:]}
 
+import unicodedata
+
 def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
     if not text:
         return ""
+    
+    # Normalize unicode to standardize Arabic Presentation Forms
+    text = unicodedata.normalize('NFKC', text)
     
     if footnote_separator:
         lines = text.split("\n")
@@ -101,7 +106,8 @@ def clean_toc_title(title, remove_numbers=False, fix_capitalization=False):
     if not title:
         return ""
     
-    res = title.strip()
+    # Normalize unicode
+    res = unicodedata.normalize('NFKC', title).strip()
     
     if remove_numbers:
         # Remove leading numbers followed by dots, spaces or directly text
@@ -170,25 +176,6 @@ def wrap_direction(text, enable=False):
     RLE = "\u202B" # Right-to-Left Embedding
     PDF = "\u202C" # Pop Directional Formatting (Closer)
     
-    # ⚡ Bolt: Fast path - if the entire text contains no Arabic characters AND
-    # there is at least one Latin character, we avoid regex counting and safely
-    # assume all non-empty lines are LTR. If neither exist, we cannot assume LTR
-    # because the original logic defaults to RTL if latin_count > arabic_count is false (0 > 0).
-    if not ARABIC_CHAR_RE.search(text) and LATIN_CHAR_RE.search(text):
-        lines = text.split("\n")
-        wrapped_lines = []
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                wrapped_lines.append(line)
-            else:
-                # Ensure the line itself has Latin text to be LTR, else default to RTL
-                if LATIN_CHAR_RE.search(stripped):
-                    wrapped_lines.append(f"{LRE}{stripped}{PDF}")
-                else:
-                    wrapped_lines.append(f"{RLE}{stripped}{PDF}")
-        return "\n".join(wrapped_lines)
-
     lines = text.split("\n")
     wrapped_lines = []
 
@@ -198,23 +185,17 @@ def wrap_direction(text, enable=False):
             wrapped_lines.append(line)
             continue
             
-        # ⚡ Bolt: Fast path for individual lines
-        if not ARABIC_CHAR_RE.search(stripped):
-            # Slow path default behavior for 0 > 0 is false (RTL)
-            if LATIN_CHAR_RE.search(stripped):
+        match_arabic = ARABIC_CHAR_RE.search(stripped)
+        match_latin = LATIN_CHAR_RE.search(stripped)
+        
+        if match_arabic and match_latin:
+            if match_latin.start() < match_arabic.start():
                 wrapped_lines.append(f"{LRE}{stripped}{PDF}")
             else:
                 wrapped_lines.append(f"{RLE}{stripped}{PDF}")
+        elif match_latin:
+            wrapped_lines.append(f"{LRE}{stripped}{PDF}")
         else:
-            # Slow path: line contains Arabic, so we must count to find predominance
-            latin_count = len(LATIN_CHAR_RE.findall(stripped))
-            arabic_count = len(ARABIC_CHAR_RE.findall(stripped))
-
-            if latin_count > arabic_count:
-                # Predominantly LTR
-                wrapped_lines.append(f"{LRE}{stripped}{PDF}")
-            else:
-                # Predominantly RTL
-                wrapped_lines.append(f"{RLE}{stripped}{PDF}")
+            wrapped_lines.append(f"{RLE}{stripped}{PDF}")
             
     return "\n".join(wrapped_lines)
