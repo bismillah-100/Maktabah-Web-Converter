@@ -40,6 +40,7 @@ TEXTS = {
         "download_btn": "📥 Unduh SQLite",
         "download_help": "Impor file SQLite ini ke aplikasi Maktabah Anda.",
         "error": "🚨 Terjadi kesalahan:",
+        "stale_warning": "⚠️ Konfigurasi telah diubah. Silakan klik 'Konversi Sekarang' lagi untuk menerapkan perubahan pada file.",
         "guide_title": "📖 Panduan Penggunaan",
         "guide_content": """
 ### Langkah-langkah Konversi:
@@ -91,6 +92,7 @@ TEXTS = {
         "download_btn": "📥 Download SQLite",
         "download_help": "Import this SQLite file into your Maktabah application.",
         "error": "🚨 An error occurred:",
+        "stale_warning": "⚠️ Settings have changed. Please click 'Convert Now' again to apply changes to the file.",
         "guide_title": "📖 Usage Guide",
         "guide_content": """
 ### Conversion Steps:
@@ -136,6 +138,9 @@ with st.sidebar.expander(t["cleaning_header"], expanded=False):
 with st.sidebar.expander(t["filter_header"], expanded=False):
     skip_ids = st.text_input(t["skip_ids_label"], value="", placeholder="1,2,5-10", help=t["skip_ids_help"])
     max_len_skip = st.number_input(t["max_len_label"], min_value=0, step=100, value=0, help=t["max_len_help"])
+
+# Capture current configuration state for staleness detection
+current_opts = (page_marker, footnote_markers, footnote_sep, parts_spec, collapse_newlines, clean_toc, fix_cap, detect_dir, skip_ids, max_len_skip)
 
 # --- File Uploader ---
 uploaded_file = st.file_uploader(t["uploader_label"], type=["epub", "docx"])
@@ -199,6 +204,7 @@ if uploaded_file is not None:
                 if success:
                     st.session_state[state_key] = True
                     st.session_state[path_key] = output_path
+                    st.session_state[f"opts_{uploaded_file.file_id}"] = current_opts
                     st.toast(t["success"], icon="✅")
                 
                 if os.path.exists(input_path): os.remove(input_path)
@@ -210,7 +216,11 @@ if uploaded_file is not None:
 
     # 4. Download button
     if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
-        st.success(t["success"])
+        is_stale = st.session_state.get(f"opts_{uploaded_file.file_id}") != current_opts
+        if is_stale:
+            st.warning(t["stale_warning"])
+        else:
+            st.success(t["success"])
         # 🛡️ Sentinel: Sanitize user input for download filename
         safe_original_name = os.path.basename(uploaded_file.name)
         download_filename = os.path.splitext(safe_original_name)[0] + ".sqlite"
