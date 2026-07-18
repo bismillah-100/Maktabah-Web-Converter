@@ -32,3 +32,6 @@
 ## 2024-07-11 - Unicode Icons as Visual Anchors
 **Learning:** Adding Unicode icons to expander headers (⚙️, 🧹, 🔍) and call-to-action buttons (⚡, 📂) provides immediate visual anchors in text-heavy settings menus and improves scannability. This is a lightweight way to enhance UI structure without needing custom CSS or complex component changes.
 **Action:** Consistently use relevant Unicode icons as visual grouping markers in Streamlit sidebars, forms, and primary buttons to improve progressive disclosure and interaction cues.
+## 2025-02-18 - Prevent Stale State Artifact Downloads
+**Learning:** In Streamlit applications, user inputs and action triggers (like 'Convert') are often decoupled. If a user modifies configuration settings after successfully generating an artifact but before downloading it, they may unknowingly download a stale file that doesn't reflect their latest settings.
+**Action:** Always capture the state of configuration inputs upon successful task completion in `st.session_state`. Before rendering a download button for the resulting artifact, compare the current input state against the saved state and display a clear warning (`st.warning`) if they diverge, advising the user to run the process again.
