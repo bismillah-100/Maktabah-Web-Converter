@@ -20,3 +20,7 @@
 **Vulnerability:** The `clean_html_tree` function in `converters/epub.py` used `etree.strip_tags()` and `tag.attrib.clear()` but failed to remove dangerous tags like `<script>` or `<style>` and their content, allowing Stored Cross-Site Scripting (XSS).
 **Learning:** `lxml`'s `strip_tags()` only removes the tags themselves and keeps the inner text. Unstripped dangerous tags (and their content) were being preserved in the HTML output, presenting an XSS risk when rendered in a WebView.
 **Prevention:** Always use `etree.strip_elements()` to completely remove dangerous tags AND their content (like `script`, `style`, `iframe`, `object`) before applying formatting cleanup via `strip_tags()`.
+## 2024-07-18 - [Disk Exhaustion DoS via Orphaned Temporary Files]
+**Vulnerability:** The application was failing to guarantee the cleanup of temporary files (`input_path` and `output_path`) in Streamlit file uploads when an exception occurred during the conversion process, leading to a Disk Exhaustion Denial of Service (DoS) vulnerability.
+**Learning:** In cloud environments like Streamlit Cloud, disk space is limited. Relying on linear execution flow `os.remove()` at the end of a block without `finally` leaves the system vulnerable to accumulated orphaned files if any step fails.
+**Prevention:** Always use a robust `try...except...finally` structure for temporary file handling. Ensure `os.remove()` is called in the `finally` block to guarantee execution regardless of exceptions.

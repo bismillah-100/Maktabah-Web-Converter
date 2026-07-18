@@ -159,6 +159,9 @@ if uploaded_file is not None:
             progress_bar.progress(percent, text=text)
 
         with st.spinner(t["processing"]):
+            input_path = None
+            output_path = None
+            success = False
             try:
                 # 1. Save uploaded file to temp
                 with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_input:
@@ -171,7 +174,6 @@ if uploaded_file is not None:
                 os.close(fd) # Close file descriptor, we just need the safe path
 
                 # 3. Run conversion
-                success = False
                 options = {
                     "book_id": "00000",
                     "page_marker": page_marker if page_marker else None,
@@ -200,13 +202,24 @@ if uploaded_file is not None:
                     st.session_state[state_key] = True
                     st.session_state[path_key] = output_path
                     st.toast(t["success"], icon="✅")
-                
-                if os.path.exists(input_path): os.remove(input_path)
 
             except Exception as e:
                 logging.error("Conversion failed", exc_info=e)
                 st.error(f"{t['error']} {type(e).__name__}")
                 st.toast(f"{t['error']} {type(e).__name__}", icon="❌")
+            finally:
+                # 🛡️ Sentinel: Prevent disk exhaustion DoS by ensuring temporary files are always cleaned up
+                if input_path and os.path.exists(input_path):
+                    try:
+                        os.remove(input_path)
+                    except Exception as e:
+                        logging.error(f"Failed to delete temporary input file {input_path}: {e}")
+
+                if not success and output_path and os.path.exists(output_path):
+                    try:
+                        os.remove(output_path)
+                    except Exception as e:
+                        logging.error(f"Failed to delete temporary output file {output_path}: {e}")
 
     # 4. Download button
     if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
