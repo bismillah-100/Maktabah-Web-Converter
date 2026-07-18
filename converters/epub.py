@@ -73,7 +73,7 @@ def get_inner_html(element):
 def extract_section(doc, anchor, next_anchor):
     body = doc.find("body")
     if body is None:
-        return "", "", []
+        return "", ""
 
     content_parts = []
 
@@ -97,7 +97,7 @@ def extract_section(doc, anchor, next_anchor):
     else:
         start_elems = doc.xpath("//*[@id=$anc]", anc=anchor)
         if not start_elems:
-            return "", "", []
+            return "", ""
         start_node = start_elems[0]
         content_parts.append(copy.deepcopy(start_node))
         for el in start_node.itersiblings():
@@ -111,7 +111,6 @@ def extract_section(doc, anchor, next_anchor):
         temp_wrapper.append(el)
 
     raw_html = etree.tostring(temp_wrapper, encoding="unicode", method="html")
-    ids_included = [e.get("id") for e in temp_wrapper.xpath("//*[@id]") if e.get("id")]
 
     # ⚡ Bolt: Removed redundant deep copy.
     # temp_wrapper is constructed fresh above and can be mutated safely
@@ -120,7 +119,7 @@ def extract_section(doc, anchor, next_anchor):
     clean_html_tree(clean_copy)
     clean_inner = get_inner_html(clean_copy).strip()
 
-    return clean_inner, raw_html, ids_included
+    return clean_inner, raw_html
 
 def process_chunk_lines(clean_lines, raw_lines, footnote_markers):
     footnote_clean = []
@@ -287,7 +286,7 @@ class EpubProcessor:
             if nxt["file"] == entry["file"] and nxt["anchor"]:
                 next_anchor = nxt["anchor"]
 
-        clean_inner, raw_html, _ = extract_section(doc, entry["anchor"], next_anchor)
+        clean_inner, raw_html = extract_section(doc, entry["anchor"], next_anchor)
 
         if not clean_inner and not raw_html:
             self.processed_locations[location_key] = 0
