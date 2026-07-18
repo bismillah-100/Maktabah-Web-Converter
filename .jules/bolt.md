@@ -22,3 +22,6 @@
 ## 2024-05-24 - Pre-compile Regex in Loops
 **Learning:** Using `re.match` inside a loop evaluating thousands of items incurs repeated regex compilation/cache-lookup overhead.
 **Action:** Always extract static regular expression patterns using `re.compile()` before entering a large loop, such as document parsing loops.
+## 2026-07-18 - Prevent Contract Breakage When Removing Unused Outputs
+**Learning:** When optimizing a function by removing an expensive, unused variable that is part of the return tuple, do not just return a dummy value (like an empty list) as it violates the function's output contract and can cause functional regressions for unknown callers.
+**Action:** Always completely remove the variable from the return signature and update all associated call sites when eliminating an unused return value.
