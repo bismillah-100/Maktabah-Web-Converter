@@ -124,32 +124,22 @@ def extract_section(doc, anchor, next_anchor):
     return clean_inner, raw_html
 
 def process_chunk_lines(clean_lines, raw_lines, footnote_markers):
-    footnote_clean = []
-    footnote_raw   = []
-    body_clean     = []
-    body_raw       = []
-
-    scanning = True
+    split_index = len(clean_lines)
     for j, line in enumerate(clean_lines):
         stripped = line.strip()
         # ⚡ Bolt: Use tuple with str.startswith() for faster O(C) check instead of any() generator
         is_footnote = stripped.startswith(footnote_markers) if footnote_markers else False
-        if scanning:
-            if is_footnote or stripped == "":
-                footnote_clean.append(line)
-                if j < len(raw_lines):
-                    footnote_raw.append(raw_lines[j])
-            else:
-                scanning = False
-                body_clean.append(line)
-                if j < len(raw_lines):
-                    body_raw.append(raw_lines[j])
-        else:
-            body_clean.append(line)
-            if j < len(raw_lines):
-                body_raw.append(raw_lines[j])
+        if not (stripped == "" or is_footnote):
+            split_index = j
+            break
 
-    return footnote_clean, footnote_raw, body_clean, body_raw
+    raw_bounded = raw_lines[:len(clean_lines)]
+    return (
+        clean_lines[:split_index],
+        raw_bounded[:split_index],
+        clean_lines[split_index:],
+        raw_bounded[split_index:]
+    )
 
 def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
     if page_marker and page_marker in raw_html:

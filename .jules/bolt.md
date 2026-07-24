@@ -32,3 +32,7 @@
 ## 2024-05-24 - Optimize lxml deep copying
 **Learning:** When deep copying `lxml` Element objects in Python, `copy.copy()` acts as a full deep copy at the C-level (libxml2) but is significantly faster (around 44% in tests) than Python's generic `copy.deepcopy()` because it bypasses the slow recursive type-checking and memoization dictionary overhead.
 **Action:** Use `copy.copy()` when duplicating lxml elements inside performance-critical paths instead of `copy.deepcopy()`.
+
+## 2024-05-24 - List Appending Loop Optimized to Slicing
+**Learning:** Sequential appending to empty lists inside a loop for partitioning data is much slower than finding the split index and slicing.
+**Action:** Use native C-backed list slicing instead of `for` loop iteration with `append` where possible to optimize data partitioning logic.
