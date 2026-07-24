@@ -154,8 +154,8 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
     final_clean = []
     final_raw   = []
 
-    current_clean = clean_splits[0]
-    current_raw   = raw_splits[0]
+    current_clean_list = [clean_splits[0]]
+    current_raw_list   = [raw_splits[0]]
 
     for i in range(1, len(clean_splits)):
         next_clean = clean_splits[i]
@@ -169,17 +169,17 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
         )
 
         if footnote_clean:
-            current_clean += "\n" + "\n".join(footnote_clean)
-            current_raw   += "\n" + "\n".join(footnote_raw)
+            current_clean_list.extend(footnote_clean)
+            current_raw_list.extend(footnote_raw)
 
-        final_clean.append(current_clean)
-        final_raw.append(current_raw)
+        final_clean.append("\n".join(current_clean_list))
+        final_raw.append("\n".join(current_raw_list))
 
-        current_clean = "\n".join(body_clean)
-        current_raw   = "\n".join(body_raw)
+        current_clean_list = body_clean
+        current_raw_list   = body_raw
 
-    final_clean.append(current_clean)
-    final_raw.append(current_raw)
+    final_clean.append("\n".join(current_clean_list))
+    final_raw.append("\n".join(current_raw_list))
 
     return final_clean, final_raw
 
