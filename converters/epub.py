@@ -11,6 +11,8 @@ from converters.utils import (
     wrap_direction, parse_skip_ids
 )
 
+ID_PATTERN = re.compile(r'id=["\']([^"\']+)["\']')
+
 def walk_toc(entries, toc_entries, lvl=1, parent_toc_index=None):
     for entry in entries:
         if isinstance(entry, epub.Link):
@@ -326,7 +328,7 @@ class EpubProcessor:
                 toc_link_id    = self.global_id
                 first_assigned = True
 
-            found_ids = re.findall(r'id=["\']([^"\']+)["\']', raw_chunk or "")
+            found_ids = ID_PATTERN.findall(raw_chunk or "")
             for aid in found_ids:
                 key = (entry["file"], aid)
                 if key not in self.processed_locations:

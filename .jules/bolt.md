@@ -25,3 +25,6 @@
 ## 2026-07-18 - Prevent Contract Breakage When Removing Unused Outputs
 **Learning:** When optimizing a function by removing an expensive, unused variable that is part of the return tuple, do not just return a dummy value (like an empty list) as it violates the function's output contract and can cause functional regressions for unknown callers.
 **Action:** Always completely remove the variable from the return signature and update all associated call sites when eliminating an unused return value.
+## 2024-07-24 - Pre-compiling Regex in Loops
+**Learning:** Re-compiling regular expressions using inline functions like `re.findall()` or `re.search()` inside a tight loop creates unnecessary CPU overhead due to redundant string parsing and cache lookups.
+**Action:** Always extract and pre-compile regular expressions using `re.compile()` at the module level or outside the loop when they are used repeatedly, especially in performance-critical code paths like text parsing.
