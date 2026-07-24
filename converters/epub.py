@@ -95,18 +95,18 @@ def extract_section(doc, anchor, next_anchor):
             if next_anchor:
                 if el.get("id") == next_anchor or el in break_nodes:
                     break
-            content_parts.append(copy.deepcopy(el))
+            content_parts.append(copy.copy(el))
     else:
         start_elems = doc.xpath("//*[@id=$anc]", anc=anchor)
         if not start_elems:
             return "", ""
         start_node = start_elems[0]
-        content_parts.append(copy.deepcopy(start_node))
+        content_parts.append(copy.copy(start_node))
         for el in start_node.itersiblings():
             if next_anchor:
                 if el.get("id") == next_anchor or el in break_nodes:
                     break
-            content_parts.append(copy.deepcopy(el))
+            content_parts.append(copy.copy(el))
 
     temp_wrapper = etree.Element("div")
     for el in content_parts:

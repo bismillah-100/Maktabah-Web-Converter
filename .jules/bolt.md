@@ -28,3 +28,7 @@
 ## 2024-07-24 - Pre-compiling Regex in Loops
 **Learning:** Re-compiling regular expressions using inline functions like `re.findall()` or `re.search()` inside a tight loop creates unnecessary CPU overhead due to redundant string parsing and cache lookups.
 **Action:** Always extract and pre-compile regular expressions using `re.compile()` at the module level or outside the loop when they are used repeatedly, especially in performance-critical code paths like text parsing.
+
+## 2024-05-24 - Optimize lxml deep copying
+**Learning:** When deep copying `lxml` Element objects in Python, `copy.copy()` acts as a full deep copy at the C-level (libxml2) but is significantly faster (around 44% in tests) than Python's generic `copy.deepcopy()` because it bypasses the slow recursive type-checking and memoization dictionary overhead.
+**Action:** Use `copy.copy()` when duplicating lxml elements inside performance-critical paths instead of `copy.deepcopy()`.
