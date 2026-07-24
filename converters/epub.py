@@ -288,6 +288,14 @@ class EpubProcessor:
             clean_inner, raw_html, self.page_marker, self.footnote_markers
         )
 
+        toc_link_id = self._process_chunks(clean_chunks, raw_chunks, entry)
+
+        if location_key not in self.processed_locations:
+            self.processed_locations[location_key] = toc_link_id or 0
+
+        return toc_link_id
+
+    def _process_chunks(self, clean_chunks, raw_chunks, entry):
         toc_link_id = 0
         first_assigned = False
 
@@ -327,9 +335,6 @@ class EpubProcessor:
             self.global_id           += 1
             self.source_page_counter += 1
             self.current_page_number += 1
-
-        if location_key not in self.processed_locations:
-            self.processed_locations[location_key] = toc_link_id or 0
 
         return toc_link_id
 
