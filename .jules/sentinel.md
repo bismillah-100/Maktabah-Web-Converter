@@ -24,3 +24,8 @@
 **Vulnerability:** The application was failing to guarantee the cleanup of temporary files (`input_path` and `output_path`) in Streamlit file uploads when an exception occurred during the conversion process, leading to a Disk Exhaustion Denial of Service (DoS) vulnerability.
 **Learning:** In cloud environments like Streamlit Cloud, disk space is limited. Relying on linear execution flow `os.remove()` at the end of a block without `finally` leaves the system vulnerable to accumulated orphaned files if any step fails.
 **Prevention:** Always use a robust `try...except...finally` structure for temporary file handling. Ensure `os.remove()` is called in the `finally` block to guarantee execution regardless of exceptions.
+
+## 2024-07-25 - SSRF / XXE via DTD Fetching in lxml.html.fromstring
+**Vulnerability:** The application used `html.fromstring(item.get_content())` to parse untrusted HTML from user-uploaded EPUB files. By default, `lxml` attempts to fetch external DTDs specified in the `DOCTYPE` over the network, leading to a Server-Side Request Forgery (SSRF) vulnerability.
+**Learning:** `lxml`'s default parsers for both XML and HTML have unsafe defaults regarding network requests for external entities and DTDs. Using `html.fromstring()` directly without providing a securely configured parser leaves the application vulnerable to blind SSRF or potentially XXE if network connectivity is available.
+**Prevention:** Always instantiate a secure parser with `html.HTMLParser(no_network=True)` (or `etree.XMLParser(resolve_entities=False, no_network=True)` for XML) and pass it explicitly to `fromstring(..., parser=secure_parser)` when parsing untrusted markup.

@@ -44,7 +44,9 @@ def load_xhtml(book, xhtml_cache, file):
         item = book.get_item_with_href(file)
         if not item:
             return None
-        doc = html.fromstring(item.get_content())
+        # 🛡️ Sentinel: Prevent SSRF/XXE via DTD fetching by disabling network access in parser
+        secure_parser = html.HTMLParser(no_network=True)
+        doc = html.fromstring(item.get_content(), parser=secure_parser)
         xhtml_cache[file] = doc
         return doc
     except Exception:
