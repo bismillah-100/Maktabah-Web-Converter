@@ -35,6 +35,9 @@ TEXTS = {
         "max_len_help": "Lewati halaman jika jumlah karakter melebihi angka ini (0 = nonaktif).",
         "uploader_label": "📂 Pilih file (EPUB, DOCX)",
         "convert_btn": "⚡ Konversi Sekarang",
+        "reconvert_btn": "🔄 Konversi Ulang",
+        "converted_btn": "✅ Sudah Dikonversi",
+        "converted_help": "File sudah dikonversi dengan pengaturan ini. Unduh di bawah.",
         "processing": "Sedang memproses...",
         "success": "🎉 Konversi Berhasil!",
         "download_btn": "📥 Unduh SQLite",
@@ -87,6 +90,9 @@ TEXTS = {
         "max_len_help": "Skip page if character count exceeds this number (0 = disabled).",
         "uploader_label": "📂 Choose file (EPUB, DOCX)",
         "convert_btn": "⚡ Convert Now",
+        "reconvert_btn": "🔄 Re-Convert",
+        "converted_btn": "✅ Converted",
+        "converted_help": "File already converted with these settings. Download below.",
         "processing": "Processing...",
         "success": "🎉 Conversion Successful!",
         "download_btn": "📥 Download SQLite",
@@ -156,7 +162,24 @@ if uploaded_file is not None:
         st.session_state[state_key] = False
         st.session_state[path_key] = ""
 
-    if st.button(t["convert_btn"], type="primary", use_container_width=True):
+    # Determine dynamic button state based on conversion status and staleness
+    is_converted = st.session_state.get(state_key, False)
+    is_stale = (st.session_state.get(f"opts_{uploaded_file.file_id}") != current_opts) if is_converted else False
+
+    if is_converted and not is_stale:
+        btn_label = t["converted_btn"]
+        btn_disabled = True
+        btn_help = t["converted_help"]
+    elif is_stale:
+        btn_label = t["reconvert_btn"]
+        btn_disabled = False
+        btn_help = None
+    else:
+        btn_label = t["convert_btn"]
+        btn_disabled = False
+        btn_help = None
+
+    if st.button(btn_label, type="primary", use_container_width=True, disabled=btn_disabled, help=btn_help):
         st.session_state[state_key] = False
         progress_bar = st.progress(0, text=t["processing"])
         
@@ -208,6 +231,7 @@ if uploaded_file is not None:
                     st.session_state[path_key] = output_path
                     st.session_state[f"opts_{uploaded_file.file_id}"] = current_opts
                     st.toast(t["success"], icon="✅")
+                    st.rerun()
 
             except Exception as e:
                 logging.error("Conversion failed", exc_info=e)
