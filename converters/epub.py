@@ -141,47 +141,38 @@ def process_chunk_lines(clean_lines, raw_lines, footnote_markers):
         raw_bounded[split_index:]
     )
 
+def _generate_chunks(clean_splits, raw_splits, footnote_markers):
+    current_clean = [clean_splits[0]]
+    current_raw   = [raw_splits[0]]
+
+    for next_clean, next_raw in zip(clean_splits[1:], raw_splits[1:]):
+        f_clean, f_raw, b_clean, b_raw = process_chunk_lines(
+            next_clean.split("\n"), next_raw.split("\n"), footnote_markers
+        )
+
+        if f_clean:
+            current_clean.extend(f_clean)
+            current_raw.extend(f_raw)
+
+        yield "\n".join(current_clean), "\n".join(current_raw)
+
+        current_clean = b_clean
+        current_raw   = b_raw
+
+    yield "\n".join(current_clean), "\n".join(current_raw)
+
 def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
-    if page_marker and page_marker in raw_html:
-        raw_splits  = raw_html.split(page_marker)
-        clean_splits = clean_inner.split(page_marker)
-    else:
+    if not (page_marker and page_marker in raw_html):
         return [clean_inner], [raw_html]
+
+    raw_splits  = raw_html.split(page_marker)
+    clean_splits = clean_inner.split(page_marker)
 
     if len(raw_splits) != len(clean_splits):
         return [clean_inner], [raw_html]
 
-    final_clean = []
-    final_raw   = []
-
-    current_clean_list = [clean_splits[0]]
-    current_raw_list   = [raw_splits[0]]
-
-    for i in range(1, len(clean_splits)):
-        next_clean = clean_splits[i]
-        next_raw   = raw_splits[i]
-
-        clean_lines = next_clean.split("\n")
-        raw_lines   = next_raw.split("\n")
-
-        footnote_clean, footnote_raw, body_clean, body_raw = process_chunk_lines(
-            clean_lines, raw_lines, footnote_markers
-        )
-
-        if footnote_clean:
-            current_clean_list.extend(footnote_clean)
-            current_raw_list.extend(footnote_raw)
-
-        final_clean.append("\n".join(current_clean_list))
-        final_raw.append("\n".join(current_raw_list))
-
-        current_clean_list = body_clean
-        current_raw_list   = body_raw
-
-    final_clean.append("\n".join(current_clean_list))
-    final_raw.append("\n".join(current_raw_list))
-
-    return final_clean, final_raw
+    clean_chunks, raw_chunks = zip(*_generate_chunks(clean_splits, raw_splits, footnote_markers))
+    return list(clean_chunks), list(raw_chunks)
 
 class EpubProcessor:
     def __init__(self, epub_path, db_path, book_id="00000", page_marker=None,
