@@ -104,8 +104,8 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
                 pending_headings.append((text, lvl))
         
         if text:
-            if page_marker and page_marker in para.text:
-                parts = para.text.split(page_marker)
+            if page_marker and page_marker in text:
+                parts = text.split(page_marker)
                 for i, p in enumerate(parts):
                     if p.strip():
                         current_page_text.append(p.strip())

@@ -40,3 +40,6 @@
 ## 2024-05-24 - [Avoid String Concatenation in Loops]
 **Learning:** Using `+=` inside loops for string concatenation causes excessive memory allocations and quadratic slowdown due to intermediate string object creation. This was observed in `converters/epub.py`'s `split_into_chunks` function.
 **Action:** Always accumulate strings in a list (e.g., using `.append()` or `.extend()`) and merge them efficiently using `"\n".join()` after the loop. This provided a ~30% measurable speedup in local benchmarks.
+## 2024-05-24 - [Avoid Redundant Property Access in python-docx]
+**Learning:** Accessing properties like `para.text` in `python-docx` is expensive because it triggers an internal O(N) XML traversal every time it is read.
+**Action:** Always cache the value of `para.text` into a local variable (e.g., `text = para.text`) if it needs to be accessed multiple times within a tight loop.
