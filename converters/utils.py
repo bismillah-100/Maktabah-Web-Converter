@@ -2,7 +2,8 @@ import sqlite3
 import re
 
 # ⚡ Bolt: Precompiled regular expressions for better string processing performance
-COLLAPSE_NEWLINES_RE = re.compile(r'\n\s*\n+')
+# 🛡️ Sentinel: Fixed ReDoS vulnerability in newline collapse regex
+COLLAPSE_NEWLINES_RE = re.compile(r'\n(?:[^\S\n]*\n)+')
 ARABIC_CHAR_RE = re.compile(r'[\u0600-\u06FF]')
 LEADING_NUMBERS_RE = re.compile(r'^\d+[\.\s]*')
 CAPITALIZE_RE = re.compile(r"[A-Za-z]+('[A-Za-z]+)?")
@@ -30,12 +31,14 @@ def parse_footnote_markers(markers_str):
     return tuple(m.strip() for m in markers_str.split(",") if m.strip())
 
 def setup_database(db_path, book_id):
-    if not re.match(r"^\w+$", str(book_id)):
+    # 🛡️ Sentinel: Sanitize table name to prevent SQL injection
+    if not re.match(r"^[a-zA-Z0-9_]+$", str(book_id)):
         raise ValueError("Invalid book_id")
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    table_b = f"b{book_id}"
-    table_t = f"t{book_id}"
+    # 🛡️ Sentinel: Properly escape dynamic identifiers
+    table_b = f'"b{book_id}"'
+    table_t = f'"t{book_id}"'
     cur.executescript(f"""
         DROP TABLE IF EXISTS {table_b};
         DROP TABLE IF EXISTS {table_t};
