@@ -86,15 +86,17 @@ def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
     text = unicodedata.normalize('NFKC', text)
     
     if footnote_separator:
-        lines = text.split("\n")
-        new_lines = []
         target = footnote_separator.strip()
-        for line in lines:
-            if line.strip() == target:
-                new_lines.append("__________")
-            else:
-                new_lines.append(line)
-        text = "\n".join(new_lines)
+        # ⚡ Bolt: Fast-path optimization - check if target exists in text before O(N) line splitting
+        if target in text:
+            lines = text.split("\n")
+            new_lines = []
+            for line in lines:
+                if line.strip() == target:
+                    new_lines.append("__________")
+                else:
+                    new_lines.append(line)
+            text = "\n".join(new_lines)
 
     if collapse_newlines:
         # Replace 2 or more newlines with a single newline
@@ -179,8 +181,22 @@ def wrap_direction(text, enable=False):
     RLE = "\u202B" # Right-to-Left Embedding
     PDF = "\u202C" # Pop Directional Formatting (Closer)
     
+    # ⚡ Bolt: Fast-path optimization - check if text exclusively contains one script type
+    # This skips O(N) line-by-line regex parsing for monolingual text blocks.
+    has_latin = bool(LATIN_CHAR_RE.search(text))
+
+    if not has_latin:
+        # If there is no Latin, every non-empty line defaults to RLE in the original logic
+        # (whether it has Arabic or is just numbers/symbols)
+        return "\n".join([f"{RLE}{line.strip()}{PDF}" if line.strip() else line for line in text.split("\n")])
+
+    # Mixed text or Latin-containing text: process line by line to preserve exact original behavior
+    # for neutral lines (like "123") in blocks that contain Latin.
     lines = text.split("\n")
     wrapped_lines = []
+
+    search_arabic = ARABIC_CHAR_RE.search
+    search_latin = LATIN_CHAR_RE.search
 
     for line in lines:
         stripped = line.strip()
@@ -188,8 +204,8 @@ def wrap_direction(text, enable=False):
             wrapped_lines.append(line)
             continue
             
-        match_arabic = ARABIC_CHAR_RE.search(stripped)
-        match_latin = LATIN_CHAR_RE.search(stripped)
+        match_arabic = search_arabic(stripped)
+        match_latin = search_latin(stripped)
         
         if match_arabic and match_latin:
             if match_latin.start() < match_arabic.start():

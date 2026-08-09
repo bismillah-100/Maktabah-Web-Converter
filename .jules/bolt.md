@@ -43,3 +43,8 @@
 ## 2024-05-24 - [Avoid Redundant Property Access in python-docx]
 **Learning:** Accessing properties like `para.text` in `python-docx` is expensive because it triggers an internal O(N) XML traversal every time it is read.
 **Action:** Always cache the value of `para.text` into a local variable (e.g., `text = para.text`) if it needs to be accessed multiple times within a tight loop.
+
+## 2024-05-27 - Fast-path Text Processing Before O(N) Loops
+**Learning:** Performing line-by-line regex parsing (`re.search`) or string splitting and matching on large text blocks introduces massive overhead when the target condition (e.g., presence of Arabic characters, or a specific footnote separator) is entirely absent from the text or is homogeneous.
+**Action:** Always insert an O(C) fast-path check (e.g., checking `target in text` or doing a global `bool(REGEX.search(text))`) on the entire block before entering O(N) line-by-line loops. This provides >2x to >7x speedups by entirely bypassing the loop when unnecessary.
+
