@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import tempfile
 import logging
+import shutil
 from converters.epub import process_epub
 from converters.docx import process_docx
 
@@ -193,7 +194,8 @@ if uploaded_file is not None:
             try:
                 # 1. Save uploaded file to temp
                 with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_input:
-                    tmp_input.write(uploaded_file.getvalue())
+                    uploaded_file.seek(0)
+                    shutil.copyfileobj(uploaded_file, tmp_input)
                     input_path = tmp_input.name
 
                 # 2. Prepare safe output path using temporary file
