@@ -35,3 +35,11 @@
 **Learning:** Calling `getvalue()` on large uploaded files (like large EPUB or DOCX files) exhausts available RAM in memory-constrained environments (like Streamlit Cloud), causing out-of-memory crashes.
 **Prevention:** Stream file contents directly to disk using `shutil.copyfileobj(uploaded_file, tmp_input)` with `uploaded_file.seek(0)` to minimize memory consumption and prevent reading 0 bytes.
 
+## 2026-08-22 - Disk Exhaustion DoS in Streamlit Download
+**Vulnerability:** Lingering temporary files on disk when generating downloadable content.
+**Learning:** Relying on  checks for temporary files after a successful conversion leaves them on disk indefinitely, leading to Disk Exhaustion DoS over time.
+**Prevention:** Read the generated file contents directly into  as bytes, and unconditionally delete the temporary file from disk in a  block before serving the download from memory.
+## 2024-05-24 - Disk Exhaustion DoS in Streamlit Download
+**Vulnerability:** Lingering temporary files on disk when generating downloadable content.
+**Learning:** Relying on `os.path.exists()` checks for temporary files after a successful conversion leaves them on disk indefinitely, leading to Disk Exhaustion DoS over time.
+**Prevention:** Read the generated file contents directly into `st.session_state` as bytes, and unconditionally delete the temporary file from disk in a `finally` block before serving the download from memory.

@@ -157,11 +157,11 @@ if uploaded_file is not None:
     
     # Use uploaded_file.file_id to ensure a unique key for each upload, even if filename is the same
     state_key = f"converted_{uploaded_file.file_id}"
-    path_key = f"output_path_{uploaded_file.file_id}"
+    data_key = f"output_data_{uploaded_file.file_id}"
 
     if state_key not in st.session_state:
         st.session_state[state_key] = False
-        st.session_state[path_key] = ""
+        st.session_state[data_key] = None
 
     # Determine dynamic button state based on conversion status and staleness
     is_converted = st.session_state.get(state_key, False)
@@ -229,8 +229,10 @@ if uploaded_file is not None:
                 update_progress(1.0, "Done!" if lang == "en" else "Selesai!")
 
                 if success:
+                    with open(output_path, "rb") as f:
+                        file_data = f.read()
                     st.session_state[state_key] = True
-                    st.session_state[path_key] = output_path
+                    st.session_state[data_key] = file_data
                     st.session_state[f"opts_{uploaded_file.file_id}"] = current_opts
                     st.toast(t["success"], icon="✅")
                     st.rerun()
@@ -240,21 +242,21 @@ if uploaded_file is not None:
                 st.error(f"{t['error']} {type(e).__name__}")
                 st.toast(f"{t['error']} {type(e).__name__}", icon="❌")
             finally:
-                # 🛡️ Sentinel: Prevent disk exhaustion DoS by ensuring temporary files are always cleaned up
+                # 🛡️ Sentinel: Prevent disk exhaustion DoS by ensuring temporary files are always cleaned up unconditionally
                 if input_path and os.path.exists(input_path):
                     try:
                         os.remove(input_path)
                     except Exception as e:
                         logging.error(f"Failed to delete temporary input file {input_path}: {e}")
 
-                if not success and output_path and os.path.exists(output_path):
+                if output_path and os.path.exists(output_path):
                     try:
                         os.remove(output_path)
                     except Exception as e:
                         logging.error(f"Failed to delete temporary output file {output_path}: {e}")
 
     # 4. Download button
-    if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
+    if st.session_state.get(state_key) and st.session_state.get(data_key) is not None:
         is_stale = st.session_state.get(f"opts_{uploaded_file.file_id}") != current_opts
         if is_stale:
             st.warning(t["stale_warning"])
@@ -264,23 +266,22 @@ if uploaded_file is not None:
         safe_original_name = os.path.basename(uploaded_file.name)
         download_filename = os.path.splitext(safe_original_name)[0] + ".sqlite"
 
-        file_size_bytes = os.path.getsize(st.session_state[path_key])
+        file_size_bytes = len(st.session_state[data_key])
         if file_size_bytes < 1024 * 1024:
             file_size_fmt = f"{file_size_bytes / 1024:.1f} KB"
         else:
             file_size_fmt = f"{file_size_bytes / (1024 * 1024):.1f} MB"
         btn_label = f"{t['download_btn']} ({file_size_fmt})"
 
-        with open(st.session_state[path_key], "rb") as f:
-            st.download_button(
-                label=btn_label,
-                data=f,
-                file_name=download_filename,
-                mime="application/x-sqlite3",
-                type="primary",
-                use_container_width=True,
-                help=t["download_help"]
-            )
+        st.download_button(
+            label=btn_label,
+            data=st.session_state[data_key],
+            file_name=download_filename,
+            mime="application/x-sqlite3",
+            type="primary",
+            use_container_width=True,
+            help=t["download_help"]
+        )
 else:
     st.info(t["empty_state"], icon="ℹ️")
     st.button(t["convert_btn"], type="primary", use_container_width=True, disabled=True, help=t["empty_state"])
