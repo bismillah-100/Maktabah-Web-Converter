@@ -40,11 +40,11 @@ TEXTS = {
         "converted_btn": "✅ Sudah Dikonversi",
         "converted_help": "File sudah dikonversi dengan pengaturan ini. Unduh di bawah.",
         "processing": "Sedang memproses...",
-        "success": "🎉 Konversi Berhasil!",
+        "success": "Konversi Berhasil!",
         "download_btn": "📥 Unduh SQLite",
         "download_help": "Impor file SQLite ini ke aplikasi Maktabah Anda.",
-        "error": "🚨 Terjadi kesalahan:",
-        "stale_warning": "⚠️ Konfigurasi telah diubah. Silakan klik 'Konversi Sekarang' lagi untuk menerapkan perubahan pada file.",
+        "error": "Terjadi kesalahan:",
+        "stale_warning": "Konfigurasi telah diubah. Silakan klik 'Konversi Ulang' lagi untuk menerapkan perubahan pada file.",
         "guide_title": "📖 Panduan Penggunaan",
         "guide_content": """
 ### Langkah-langkah Konversi:
@@ -95,11 +95,11 @@ TEXTS = {
         "converted_btn": "✅ Converted",
         "converted_help": "File already converted with these settings. Download below.",
         "processing": "Processing...",
-        "success": "🎉 Conversion Successful!",
+        "success": "Conversion Successful!",
         "download_btn": "📥 Download SQLite",
         "download_help": "Import this SQLite file into your Maktabah application.",
-        "error": "🚨 An error occurred:",
-        "stale_warning": "⚠️ Settings have changed. Please click 'Convert Now' again to apply changes to the file.",
+        "error": "An error occurred:",
+        "stale_warning": "Settings have changed. Please click 'Re-Convert' again to apply changes to the file.",
         "guide_title": "📖 Usage Guide",
         "guide_content": """
 ### Conversion Steps:
@@ -237,7 +237,7 @@ if uploaded_file is not None:
 
             except Exception as e:
                 logging.error("Conversion failed", exc_info=e)
-                st.error(f"{t['error']} {type(e).__name__}")
+                st.error(f"{t['error']} {type(e).__name__}", icon="🚨")
                 st.toast(f"{t['error']} {type(e).__name__}", icon="❌")
             finally:
                 # 🛡️ Sentinel: Prevent disk exhaustion DoS by ensuring temporary files are always cleaned up
@@ -257,9 +257,9 @@ if uploaded_file is not None:
     if st.session_state.get(state_key) and os.path.exists(st.session_state.get(path_key, "")):
         is_stale = st.session_state.get(f"opts_{uploaded_file.file_id}") != current_opts
         if is_stale:
-            st.warning(t["stale_warning"])
+            st.warning(t["stale_warning"], icon="⚠️")
         else:
-            st.success(t["success"])
+            st.success(t["success"], icon="🎉")
         # 🛡️ Sentinel: Sanitize user input for download filename
         safe_original_name = os.path.basename(uploaded_file.name)
         download_filename = os.path.splitext(safe_original_name)[0] + ".sqlite"
