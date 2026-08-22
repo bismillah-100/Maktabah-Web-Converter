@@ -77,6 +77,13 @@ def get_page_reset_ids(part_boundaries):
     return {start_id for start_id, _ in part_boundaries[1:]}
 
 import unicodedata
+import functools
+
+@functools.lru_cache(maxsize=128)
+def _get_footnote_separator_regex(target):
+    escaped_target = re.escape(target)
+    # Match the target with optional whitespace on either side, including CRLF
+    return re.compile(rf'^[ \t\r]*{escaped_target}[ \t\r]*$', re.MULTILINE)
 
 def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
     if not text:
@@ -87,16 +94,12 @@ def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
     
     if footnote_separator:
         target = footnote_separator.strip()
-        # ⚡ Bolt: Fast-path optimization - check if target exists in text before O(N) line splitting
+        # ⚡ Bolt: Fast-path optimization - check if target exists in text before processing
         if target in text:
-            lines = text.split("\n")
-            new_lines = []
-            for line in lines:
-                if line.strip() == target:
-                    new_lines.append("__________")
-                else:
-                    new_lines.append(line)
-            text = "\n".join(new_lines)
+            # ⚡ Bolt: Use C-level regex substitution for entire text block to avoid
+            # slow Python-level line splitting, iteration, and list comprehension.
+            regex = _get_footnote_separator_regex(target)
+            text = regex.sub('__________', text)
 
     if collapse_newlines:
         # Replace 2 or more newlines with a single newline

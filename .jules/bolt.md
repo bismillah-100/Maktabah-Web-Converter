@@ -48,3 +48,7 @@
 **Learning:** Performing line-by-line regex parsing (`re.search`) or string splitting and matching on large text blocks introduces massive overhead when the target condition (e.g., presence of Arabic characters, or a specific footnote separator) is entirely absent from the text or is homogeneous.
 **Action:** Always insert an O(C) fast-path check (e.g., checking `target in text` or doing a global `bool(REGEX.search(text))`) on the entire block before entering O(N) line-by-line loops. This provides >2x to >7x speedups by entirely bypassing the loop when unnecessary.
 
+
+## $(date +%Y-%m-%d) - Optimize footnote separator replacement logic
+**Learning:** O(N) iterative line-by-line python text manipulation (`text.split('\n')`) can be a significant bottleneck for large documents. Replacing this with a module-level cached `re.MULTILINE` substitution gives a massive speed boost and eliminates memory spikes.
+**Action:** Always prefer C-level `re.sub` over iterating through arrays of lines in Python, especially for large texts. Ensure to cache the compiled regex using `@functools.lru_cache` if it relies on dynamic configuration to avoid recompilation overhead.
