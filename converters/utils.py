@@ -182,6 +182,8 @@ def parse_skip_ids(skip_str):
                 pass
     return ids
 
+WRAP_DIR_RE = re.compile(r'^[^\S\n]*(\S.*?\S|\S)[^\S\n]*$', flags=re.MULTILINE)
+
 def wrap_direction(text, enable=False):
     if not enable or not text:
         return text
@@ -190,40 +192,38 @@ def wrap_direction(text, enable=False):
     RLE = "\u202B" # Right-to-Left Embedding
     PDF = "\u202C" # Pop Directional Formatting (Closer)
     
-    # ⚡ Bolt: Fast-path optimization - check if text exclusively contains one script type
-    # This skips O(N) line-by-line regex parsing for monolingual text blocks.
+    # ⚡ Bolt: Fast-path optimization - check if text completely lacks Arabic characters.
+    # This avoids expensive per-line regex parsing where possible.
     has_latin = bool(LATIN_CHAR_RE.search(text))
 
     if not has_latin:
-        # If there is no Latin, every non-empty line defaults to RLE in the original logic
-        # (whether it has Arabic or is just numbers/symbols)
-        return "\n".join([f"{RLE}{line.strip()}{PDF}" if line.strip() else line for line in text.split("\n")])
+        # Use C-level regex substitution to wrap all non-empty lines with RLE,
+        # completely bypassing the slow Python-level line splitting and joining overhead.
+        return WRAP_DIR_RE.sub(rf'{RLE}\1{PDF}', text)
 
-    # Mixed text or Latin-containing text: process line by line to preserve exact original behavior
-    # for neutral lines (like "123") in blocks that contain Latin.
+    has_arabic = bool(ARABIC_CHAR_RE.search(text))
+
     lines = text.split("\n")
-    wrapped_lines = []
-
     search_arabic = ARABIC_CHAR_RE.search
     search_latin = LATIN_CHAR_RE.search
 
-    for line in lines:
+    if not has_arabic:
+        # Avoid running `ARABIC_CHAR_RE.search` on every single line when there is no Arabic globally
+        def process_latin_only(line):
+            stripped = line.strip()
+            if not stripped: return line
+            return f"{LRE}{stripped}{PDF}" if search_latin(stripped) else f"{RLE}{stripped}{PDF}"
+        return "\n".join([process_latin_only(line) for line in lines])
+
+    # Mixed text: Process line by line to preserve exact original behavior
+    def process_mixed(line):
         stripped = line.strip()
         if not stripped:
-            wrapped_lines.append(line)
-            continue
-            
+            return line
         match_arabic = search_arabic(stripped)
         match_latin = search_latin(stripped)
-        
         if match_arabic and match_latin:
-            if match_latin.start() < match_arabic.start():
-                wrapped_lines.append(f"{LRE}{stripped}{PDF}")
-            else:
-                wrapped_lines.append(f"{RLE}{stripped}{PDF}")
-        elif match_latin:
-            wrapped_lines.append(f"{LRE}{stripped}{PDF}")
-        else:
-            wrapped_lines.append(f"{RLE}{stripped}{PDF}")
-            
-    return "\n".join(wrapped_lines)
+            return f"{LRE}{stripped}{PDF}" if match_latin.start() < match_arabic.start() else f"{RLE}{stripped}{PDF}"
+        return f"{LRE}{stripped}{PDF}" if match_latin else f"{RLE}{stripped}{PDF}"
+
+    return "\n".join([process_mixed(line) for line in lines])

@@ -52,3 +52,6 @@
 ## $(date +%Y-%m-%d) - Optimize footnote separator replacement logic
 **Learning:** O(N) iterative line-by-line python text manipulation (`text.split('\n')`) can be a significant bottleneck for large documents. Replacing this with a module-level cached `re.MULTILINE` substitution gives a massive speed boost and eliminates memory spikes.
 **Action:** Always prefer C-level `re.sub` over iterating through arrays of lines in Python, especially for large texts. Ensure to cache the compiled regex using `@functools.lru_cache` if it relies on dynamic configuration to avoid recompilation overhead.
+## 2024-11-20 - Fast-pathing mixed RTL/LTR detection
+**Learning:** Checking for purely Latin/English text using a global `ARABIC_CHAR_RE.search()` drastically cuts down conversion time for the very common case of LTR texts containing numbers (which forces a slow fallback in the original mixed text logic).
+**Action:** When performing O(N) line-by-line regex parsing that branches on mixed character scripts, pre-flight the entire string block with a global O(1) `.search()` to determine if both scripts are even present.
