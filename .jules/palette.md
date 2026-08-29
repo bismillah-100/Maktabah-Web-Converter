@@ -42,3 +42,6 @@
 ## 2024-11-21 - Use Native Icons for Streamlit Alerts
 **Learning:** Hardcoding emojis directly into strings used for Streamlit alerts (like `st.success`, `st.error`, `st.warning`) can cause double-emoji rendering if an icon is also provided, or create poor visual alignment compared to Streamlit's native icon layout. Furthermore, instructional messages (like warnings to re-run a process) should accurately reference the dynamic labels of the buttons they instruct the user to click.
 **Action:** When displaying alerts in Streamlit apps, always remove hardcoded emojis from the text strings and pass them instead via the native `icon="🚨"` parameter. Ensure that UI copy accurately reflects the current state of dynamic elements (e.g., using 'Re-Convert' instead of 'Convert' when settings are stale).
+## 2026-08-29 - Dynamic Interpolation of UI Labels
+**Learning:** Hardcoding UI element labels in instructional text causes UX friction when the actual labels (and their icons) change based on dynamic state.
+**Action:** Use string interpolation to dynamically inject the actual UI label definitions into the instructional text.

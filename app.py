@@ -46,7 +46,7 @@ TEXTS = {
         "download_btn": "📥 Unduh SQLite",
         "download_help": "Impor file SQLite ini ke aplikasi Maktabah Anda.",
         "error": "Terjadi kesalahan:",
-        "stale_warning": "Konfigurasi telah diubah. Silakan klik 'Konversi Ulang' lagi untuk menerapkan perubahan pada file.",
+        "stale_warning": "Konfigurasi telah diubah. Silakan klik '{reconvert_btn}' lagi untuk menerapkan perubahan pada file.",
         "guide_title": "📖 Panduan Penggunaan",
         "guide_content": """
 ### Langkah-langkah Konversi:
@@ -56,7 +56,7 @@ TEXTS = {
     - Gunakan **Hapus nomor & titik di TOC** jika daftar isi dokumen Anda memiliki penomoran manual yang ingin dibersihkan.
     - Aktifkan **Deteksi arah tulisan (RTL/LTR)** jika dokumen Anda berisi campuran teks Arab dan Latin.
 3. **Unggah File**: Pilih file `.epub` atau `.docx` dari komputer Anda.
-4. **Konversi & Unduh**: Klik tombol **Konversi Sekarang**, tunggu proses selesai, lalu klik **Unduh SQLite**.
+4. **Konversi & Unduh**: Klik tombol **{convert_btn}**, tunggu proses selesai, lalu klik **{download_btn}**.
 
 ### Penjelasan Fitur Khusus:
 - **Footnote Separator**: Jika Anda memiliki baris pemisah khusus antara teks dan footnote, masukkan di sini agar otomatis diubah menjadi format standar Maktabah (`__________`).
@@ -103,7 +103,7 @@ TEXTS = {
         "download_btn": "📥 Download SQLite",
         "download_help": "Import this SQLite file into your Maktabah application.",
         "error": "An error occurred:",
-        "stale_warning": "Settings have changed. Please click 'Re-Convert' again to apply changes to the file.",
+        "stale_warning": "Settings have changed. Please click '{reconvert_btn}' again to apply changes to the file.",
         "guide_title": "📖 Usage Guide",
         "guide_content": """
 ### Conversion Steps:
@@ -113,7 +113,7 @@ TEXTS = {
     - Use **Clean numbers & dots in TOC** if your TOC has manual numbering to be cleaned.
     - Enable **Detect text direction (RTL/LTR)** if your document contains mixed Arabic and Latin text.
 3. **Upload File**: Select an `.epub` or `.docx` file from your computer.
-4. **Convert & Download**: Click the **Convert Now** button, wait for completion, then click **Download SQLite**.
+4. **Convert & Download**: Click the **{convert_btn}** button, wait for completion, then click **{download_btn}**.
 
 ### Special Features:
 - **Footnote Separator**: If you have a specific separator line between text and footnotes, enter it here to automatically convert it to the standard Maktabah format (`__________`).
@@ -269,7 +269,7 @@ if uploaded_file is not None:
     if st.session_state.get(state_key) and st.session_state.get(data_key) is not None:
         is_stale = st.session_state.get(f"opts_{uploaded_file.file_id}") != current_opts
         if is_stale:
-            st.warning(t["stale_warning"], icon="⚠️")
+            st.warning(t["stale_warning"].format(reconvert_btn=t["reconvert_btn"]), icon="⚠️")
         else:
             st.success(t["success"], icon="🎉")
         # 🛡️ Sentinel: Sanitize user input for download filename
@@ -299,6 +299,6 @@ else:
 st.divider()
 
 with st.expander(t["guide_title"]):
-    st.markdown(t["guide_content"])
+    st.markdown(t["guide_content"].format(convert_btn=t["convert_btn"], download_btn=t["download_btn"]))
 
 st.info(t["info_cloud"])
