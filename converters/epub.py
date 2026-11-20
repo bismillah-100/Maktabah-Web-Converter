@@ -179,7 +179,7 @@ def split_into_chunks(clean_inner, raw_html, page_marker, footnote_markers):
 class EpubProcessor:
     def __init__(self, epub_path, db_path, book_id="00000", page_marker=None,
                  footnote_markers_str=None, parts_str=None,
-                 collapse_newlines=False, clean_toc=False, fix_cap=False,
+                 collapse_newlines=False, max_blank_lines=1, clean_toc=False, fix_cap=False,
                  detect_dir=False, skip_ids_str=None, max_len_skip=0,
                  progress_callback=None, footnote_separator=None):
         self.epub_path = epub_path
@@ -187,6 +187,7 @@ class EpubProcessor:
         self.book_id = book_id
         self.page_marker = page_marker
         self.collapse_newlines = collapse_newlines
+        self.max_blank_lines = max_blank_lines
         self.clean_toc = clean_toc
         self.fix_cap = fix_cap
         self.detect_dir = detect_dir
@@ -293,7 +294,7 @@ class EpubProcessor:
         first_assigned = False
 
         for raw_chunk, clean_chunk in zip(raw_chunks, clean_chunks):
-            chunk_clean = clean_content_text(clean_chunk, collapse_newlines=self.collapse_newlines, footnote_separator=self.footnote_separator)
+            chunk_clean = clean_content_text(clean_chunk, collapse_newlines=self.collapse_newlines, max_blank_lines=self.max_blank_lines, footnote_separator=self.footnote_separator)
             chunk_clean = wrap_direction(chunk_clean, enable=self.detect_dir)
             if not chunk_clean:
                 continue
@@ -333,13 +334,13 @@ class EpubProcessor:
 
 def process_epub(epub_path, db_path, book_id="00000", page_marker=None,
                  footnote_markers_str=None, parts_str=None,
-                 collapse_newlines=False, clean_toc=False, fix_cap=False,
+                 collapse_newlines=False, max_blank_lines=1, clean_toc=False, fix_cap=False,
                  detect_dir=False, skip_ids_str=None, max_len_skip=0,
                  progress_callback=None, footnote_separator=None):
     processor = EpubProcessor(
         epub_path, db_path, book_id, page_marker,
         footnote_markers_str, parts_str,
-        collapse_newlines, clean_toc, fix_cap,
+        collapse_newlines, max_blank_lines, clean_toc, fix_cap,
         detect_dir, skip_ids_str, max_len_skip,
         progress_callback, footnote_separator
     )

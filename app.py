@@ -22,7 +22,9 @@ TEXTS = {
         "parts_help": "Format: start_id:part_num,...",
         "cleaning_header": "🧹 Opsi Pembersihan",
         "collapse_newlines_label": "Hapus baris kosong berlebih",
-        "collapse_newlines_help": "Menghapus multiple newline menjadi satu.",
+        "collapse_newlines_help": "Membatasi jumlah baris kosong berturut-turut antar-paragraf.",
+        "max_blank_lines_label": "Maksimal Baris Kosong",
+        "max_blank_lines_help": "Jumlah maksimal baris kosong yang disisakan (0 = hapus semua baris kosong, 1 = sisakan 1 baris kosong standar).",
         "clean_toc_label": "Hapus nomor & titik di TOC",
         "clean_toc_help": "Menghapus angka di awal judul daftar isi (misal: '001. Judul' -> 'Judul').",
         "fix_cap_label": "Format Capitalization (Non-Arab)",
@@ -77,7 +79,9 @@ TEXTS = {
         "parts_help": "Format: start_id:part_num,...",
         "cleaning_header": "🧹 Cleaning Options",
         "collapse_newlines_label": "Collapse extra newlines",
-        "collapse_newlines_help": "Removes multiple newlines into a single one.",
+        "collapse_newlines_help": "Limits the number of consecutive blank lines between paragraphs.",
+        "max_blank_lines_label": "Max Blank Lines",
+        "max_blank_lines_help": "Maximum consecutive blank lines to keep (0 = remove all blank lines, 1 = keep 1 standard blank line).",
         "clean_toc_label": "Clean numbers & dots in TOC",
         "clean_toc_help": "Removes leading numbers in TOC titles (e.g., '001. Title' -> 'Title').",
         "fix_cap_label": "Format Capitalization (Non-Arab)",
@@ -138,6 +142,11 @@ with st.sidebar.expander(t["config_header"], expanded=True):
 
 with st.sidebar.expander(t["cleaning_header"], expanded=False):
     collapse_newlines = st.checkbox(t["collapse_newlines_label"], value=True, help=t["collapse_newlines_help"])
+    max_blank_lines = 1
+    if collapse_newlines:
+        max_blank_lines = st.number_input(
+            t["max_blank_lines_label"], min_value=0, max_value=10, value=1, step=1, help=t["max_blank_lines_help"]
+        )
     clean_toc = st.checkbox(t["clean_toc_label"], value=False, help=t["clean_toc_help"])
     fix_cap = st.checkbox(t["fix_cap_label"], value=False, help=t["fix_cap_help"])
     detect_dir = st.checkbox(t["detect_dir_label"], value=False, help=t["detect_dir_help"])
@@ -147,7 +156,7 @@ with st.sidebar.expander(t["filter_header"], expanded=False):
     max_len_skip = st.number_input(t["max_len_label"], min_value=0, step=100, value=0, help=t["max_len_help"])
 
 # Capture current configuration state for staleness detection
-current_opts = (page_marker, footnote_markers, footnote_sep, parts_spec, collapse_newlines, clean_toc, fix_cap, detect_dir, skip_ids, max_len_skip)
+current_opts = (page_marker, footnote_markers, footnote_sep, parts_spec, collapse_newlines, max_blank_lines, clean_toc, fix_cap, detect_dir, skip_ids, max_len_skip)
 
 # --- File Uploader ---
 uploaded_file = st.file_uploader(t["uploader_label"], type=["epub", "docx"])
@@ -211,6 +220,7 @@ if uploaded_file is not None:
                     "footnote_separator": footnote_sep if footnote_sep else None,
                     "parts_str": parts_spec,
                     "collapse_newlines": collapse_newlines,
+                    "max_blank_lines": max_blank_lines,
                     "clean_toc": clean_toc,
                     "fix_cap": fix_cap,
                     "detect_dir": detect_dir,

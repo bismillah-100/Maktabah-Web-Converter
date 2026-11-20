@@ -3,7 +3,7 @@ import re
 
 # ⚡ Bolt: Precompiled regular expressions for better string processing performance
 # 🛡️ Sentinel: Fixed ReDoS vulnerability in newline collapse regex
-COLLAPSE_NEWLINES_RE = re.compile(r'\n(?:[^\S\n]*\n)+')
+COLLAPSE_NEWLINES_RE = re.compile(r'\n(?:[^\S\n]*\n){2,}')
 ARABIC_CHAR_RE = re.compile(r'[\u0600-\u06FF]')
 LEADING_NUMBERS_RE = re.compile(r'^\d+[\.\s]*')
 CAPITALIZE_RE = re.compile(r"[A-Za-z]+('[A-Za-z]+)?")
@@ -79,13 +79,17 @@ def get_page_reset_ids(part_boundaries):
 import unicodedata
 import functools
 
+@functools.lru_cache(maxsize=16)
+def _get_collapse_newlines_regex(max_blank_lines):
+    return re.compile(rf'\n(?:[^\S\n]*\n){{{max_blank_lines + 1},}}')
+
 @functools.lru_cache(maxsize=128)
 def _get_footnote_separator_regex(target):
     escaped_target = re.escape(target)
     # Match the target with optional whitespace on either side, including CRLF
     return re.compile(rf'^[ \t\r]*{escaped_target}[ \t\r]*$', re.MULTILINE)
 
-def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
+def clean_content_text(text, collapse_newlines=False, max_blank_lines=1, footnote_separator=None):
     if not text:
         return ""
     
@@ -102,8 +106,10 @@ def clean_content_text(text, collapse_newlines=False, footnote_separator=None):
             text = regex.sub('__________', text)
 
     if collapse_newlines:
-        # Replace 2 or more newlines with a single newline
-        text = COLLAPSE_NEWLINES_RE.sub('\n', text)
+        max_blank = max(0, int(max_blank_lines))
+        regex = _get_collapse_newlines_regex(max_blank)
+        replacement = '\n' * (max_blank + 1)
+        text = regex.sub(replacement, text)
     return text.strip()
 
 def is_arabic(text):

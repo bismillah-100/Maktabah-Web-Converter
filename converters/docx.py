@@ -8,7 +8,7 @@ from converters.utils import (
 
 def process_docx(docx_path, db_path, book_id="00000", page_marker=None, 
                  footnote_markers_str=None, parts_str=None, 
-                 collapse_newlines=False, clean_toc=False, fix_cap=False,
+                 collapse_newlines=False, max_blank_lines=1, clean_toc=False, fix_cap=False,
                  detect_dir=False, skip_ids_str=None, max_len_skip=0,
                  progress_callback=None, footnote_separator=None):
     
@@ -32,7 +32,7 @@ def process_docx(docx_path, db_path, book_id="00000", page_marker=None,
     def flush_page():
         nonlocal global_id, source_page_counter, current_page_number, current_page_text, table_b_inserts, table_t_inserts
         raw_text = "\n".join(current_page_text).strip()
-        text = clean_content_text(raw_text, collapse_newlines=collapse_newlines, footnote_separator=footnote_separator)
+        text = clean_content_text(raw_text, collapse_newlines=collapse_newlines, max_blank_lines=max_blank_lines, footnote_separator=footnote_separator)
         text = wrap_direction(text, enable=detect_dir)
         
         if not text:
